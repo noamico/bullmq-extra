@@ -1,4 +1,4 @@
-import { QueueBase, RedisClient, RedisConnection } from 'bullmq';
+import { JobsOptions, QueueBase, RedisClient, RedisConnection } from 'bullmq';
 import { FanoutOptions } from './fanout-options';
 import { v4 } from 'uuid';
 import * as _debug from 'debug';
@@ -37,7 +37,10 @@ export class Consumer<DataType = any> extends QueueBase {
       });
   }
 
-  consume(consumerGroup: string, cb: (data: DataType) => Promise<void>): void {
+  consume(
+    consumerGroup: string,
+    cb: (data: DataType, opts: JobsOptions) => Promise<void>,
+  ): void {
     this.waitUntilReady()
       .then(async () => {
         const streamName = this.name;
@@ -65,7 +68,7 @@ export class Consumer<DataType = any> extends QueueBase {
           try {
             // First, read pending messages (PEL)
             while (!this.closing) {
-              debug('consumer.pending.read');
+              debug('pending.read');
               const pendingResult = (await client.xreadgroup(
                 'GROUP',
                 consumerGroup,
@@ -100,9 +103,9 @@ export class Consumer<DataType = any> extends QueueBase {
                     await client.xack(streamName, consumerGroup, id);
                   }
                 }
-                debug('consumer.pending.results');
+                debug('pending.results');
               } else {
-                debug('consumer.pending.none');
+                debug('pending.none');
                 break;
               }
             }
@@ -111,7 +114,7 @@ export class Consumer<DataType = any> extends QueueBase {
 
             // Then read new messages if no pending messages are left
             while (!this.closing) {
-              debug('consumer.new.read');
+              debug('new.read');
               const newResult = (await client.xreadgroup(
                 'GROUP',
                 consumerGroup,
@@ -128,7 +131,7 @@ export class Consumer<DataType = any> extends QueueBase {
                 newResult.length > 0 &&
                 newResult[0].length > 0
               ) {
-                debug('consumer.new.results');
+                debug('new.results');
                 await this.processMessages(
                   client,
                   streamName,
@@ -137,12 +140,12 @@ export class Consumer<DataType = any> extends QueueBase {
                   cb,
                 );
               } else {
-                debug('consumer.new.none');
+                debug('new.none');
                 break;
               }
             }
 
-            debug('consumer.wait');
+            debug('wait');
             await new Promise((resolve) =>
               setTimeout(resolve, this.consumerOpts.blockTimeMs || 1000),
             );
@@ -159,7 +162,7 @@ export class Consumer<DataType = any> extends QueueBase {
     streamName: string,
     consumerGroup: string,
     messages: XReadGroupResult[],
-    cb: (data: DataType) => Promise<void>,
+    cb: (data: DataType, opts: JobsOptions) => Promise<void>,
   ): Promise<void> {
     const [, entries] = messages[0];
     for (const [id, fields] of entries) {
@@ -169,10 +172,11 @@ export class Consumer<DataType = any> extends QueueBase {
         jobData[key] = fields[i + 1];
       }
       const data = JSON.parse(jobData['data']);
+      const opts = JSON.parse(jobData['opts']);
       try {
-        await cb(data);
+        await cb(data, opts);
         await client.xack(streamName, consumerGroup, id);
-        debug('consumer.processed', data);
+        debug('processed', data);
       } catch (e) {
         this.emit('error', e);
       }
@@ -186,7 +190,7 @@ export class Consumer<DataType = any> extends QueueBase {
     ) {
       return;
     }
-    debug('consumer.trim');
+    debug('trim');
     this.lastTrim = Date.now();
     const streamName = this.name;
     const client = await this.client;

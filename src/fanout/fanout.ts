@@ -4,7 +4,7 @@ import { Consumer } from './consumer';
 import { QueueToStreamWorker } from './queue-to-stream-worker';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:fanout:consumer');
+const debug = _debug('bullmq:fanout:fanout');
 
 export class Fanout<DataType = any> {
   private consumer: Consumer;
@@ -40,15 +40,19 @@ export class Fanout<DataType = any> {
   async fanout(
     group: string,
     targetQueues: Queue<DataType>[],
-    opts?: (data: DataType) => JobsOptions,
+    optsOverride?: (data: DataType) => JobsOptions,
   ): Promise<void> {
     for (const queue of targetQueues) {
       const groupName = `${group}:${queue.name}`;
-      this.consumer.consume(groupName, async (data: DataType) => {
-        const renderedOpts = opts ? opts(data) : undefined;
-        await queue.add('default', data, renderedOpts);
-        debug('fanout.add', queue.name, data);
-      });
+      this.consumer.consume(
+        groupName,
+        async (data: DataType, opts: JobsOptions) => {
+          const renderedOptsOverride = optsOverride ? optsOverride(data) : {};
+          const mergedOpts = { ...opts, ...renderedOptsOverride };
+          await queue.add('default', data, mergedOpts);
+          debug('add', queue.name, data);
+        },
+      );
     }
     await this.closed;
   }

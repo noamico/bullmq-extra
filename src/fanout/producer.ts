@@ -1,10 +1,10 @@
-import { QueueBase, RedisConnection } from 'bullmq';
+import { JobsOptions, QueueBase, RedisConnection } from 'bullmq';
 import { ProducerOptions } from './producer-options';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:fanout:consumer');
+const debug = _debug('bullmq:fanout:producer');
 
-export class StreamProducer<DataType = any> extends QueueBase {
+export class Producer<DataType = any> extends QueueBase {
   constructor(
     streamName: string,
     opts?: ProducerOptions,
@@ -29,9 +29,16 @@ export class StreamProducer<DataType = any> extends QueueBase {
       });
   }
 
-  async produce(data: DataType): Promise<void> {
+  async produce(data: DataType, opts?: JobsOptions): Promise<void> {
     const client = await this.client;
-    await client.xadd(this.name, '*', 'data', JSON.stringify(data));
-    debug('stream-producer.produce', data);
+    await client.xadd(
+      this.name,
+      '*',
+      'data',
+      JSON.stringify(data),
+      'opts',
+      JSON.stringify(opts || {}),
+    );
+    debug('produce', data);
   }
 }

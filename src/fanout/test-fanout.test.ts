@@ -2,7 +2,7 @@ import { v4 } from 'uuid';
 import { default as IORedis } from 'ioredis';
 import { delay, Queue } from 'bullmq';
 import { Consumer } from './consumer';
-import { StreamProducer } from './stream-producer';
+import { Producer } from './producer';
 import { Fanout } from './fanout';
 import * as _debug from 'debug';
 
@@ -23,7 +23,7 @@ describe('fanout', function () {
       it('should trim to retention', async () => {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
-        const producer = new StreamProducer(streamName, {
+        const producer = new Producer(streamName, {
           connection: generalConnection,
         });
         const consumer = new Consumer(streamName, {
@@ -54,7 +54,7 @@ describe('fanout', function () {
       it('should process the jobs', async () => {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
-        const producer = new StreamProducer(streamName, {
+        const producer = new Producer(streamName, {
           connection: generalConnection,
         });
         const consumer = new Consumer(streamName, {
@@ -84,7 +84,7 @@ describe('fanout', function () {
       it('should process the jobs', async () => {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
-        const producer = new StreamProducer(streamName, {
+        const producer = new Producer(streamName, {
           connection: generalConnection,
         });
         const consumer = new Consumer(streamName, {
@@ -152,8 +152,44 @@ describe('fanout', function () {
       });
     });
 
-    describe('when jobs consumed with job options', () => {
-      it('should set options on jobs', async () => {
+    describe('when jobs produced with job options', () => {
+      it('should set options on target jobs', async () => {
+        const group = `test-${v4()}`;
+        const queueName = `test-${v4()}`;
+        const sourceQueue = new Queue(queueName, {
+          connection: generalConnection,
+        });
+        const fanout = new Fanout(queueName, {
+          connection: consumerConnection,
+        });
+        const targetQueues = [
+          new Queue(`test-${v4()}`, { connection: generalConnection }),
+          new Queue(`test-${v4()}`, { connection: generalConnection }),
+        ];
+        const jobs = 10;
+
+        fanout.fanout(group, targetQueues).then();
+
+        for (let i = 1; i <= jobs; i++) {
+          await sourceQueue.add('default', { idx: i }, { jobId: `test-${i}` });
+        }
+        while ((await targetQueues[1].count()) < jobs) {
+          await delay(50);
+        }
+        for (const queue of targetQueues) {
+          expect(await queue.count()).toEqual(jobs);
+          expect((await queue.getWaiting()).map((job) => job.opts)).toEqual(
+            Array.from(Array(jobs).keys()).map((i) => ({
+              jobId: `test-${i + 1}`,
+              attempts: 0,
+              backoff: undefined,
+            })),
+          );
+        }
+        await fanout.close();
+      });
+
+      it('should override options on target jobs', async () => {
         const group = `test-${v4()}`;
         const queueName = `test-${v4()}`;
         const sourceQueue = new Queue(queueName, {
@@ -170,7 +206,7 @@ describe('fanout', function () {
 
         fanout
           .fanout(group, targetQueues, (data: any) => ({
-            jobId: `test-${data.idx}`,
+            jobId: `test-${data.idx + 10}`,
           }))
           .then();
 
@@ -184,7 +220,7 @@ describe('fanout', function () {
           expect(await queue.count()).toEqual(jobs);
           expect((await queue.getWaiting()).map((job) => job.opts)).toEqual(
             Array.from(Array(jobs).keys()).map((i) => ({
-              jobId: `test-${i + 1}`,
+              jobId: `test-${i + 1 + 10}`,
               attempts: 0,
               backoff: undefined,
             })),

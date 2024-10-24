@@ -19,7 +19,7 @@
     "build": "nest build",
     "prebuild": "npm run lint",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest -i",
+    "test": "DEBUG=bullmq:fanout* jest",
     "deps:upgrade": "npx npm-check-updates -u -x eslint && npm i"
   },
   "dependencies": {

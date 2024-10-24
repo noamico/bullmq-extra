@@ -16,6 +16,6 @@ module.exports = {
     'text',
   ],
   collectCoverage: true,
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*test.ts', '!src/index.ts'],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*test.ts', '!src/**/index.ts'],
   forceExit: true,
 };

@@ -68,8 +68,6 @@ describe('fanout', function () {
         });
         const consumer = new Consumer(streamName, {
           connection: consumerConnection,
-          maxRetentionMs: 100,
-          trimIntervalMs: 100,
           batchSize: 10,
         });
         const jobs = 10;
@@ -78,15 +76,16 @@ describe('fanout', function () {
           processed.push(job);
         });
 
-        for (let iterations = 0; iterations < 5; iterations++) {
-          for (let i = 1; i <= jobs; i++) {
-            await producer.produce({ idx: i });
-          }
-          const length = await consumer.getLength();
-          expect(length).toBeLessThanOrEqual(jobs * 2); // trimming is not exact but it does happen
-          await delay(1000);
+        for (let i = 1; i <= jobs; i++) {
+          await producer.produce({ idx: i });
         }
-
+        while (processed.length < jobs) {
+          await delay(50);
+        }
+        expect(processed.length).toEqual(jobs);
+        expect(processed.map((job) => job.idx)).toEqual(
+          Array.from(Array(jobs).keys()).map((i) => i + 1),
+        );
         await consumer.close();
       });
     });

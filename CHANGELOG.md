@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.2.2 - 2024-10-25
+#### Bug Fixes
+- readme refinements - (3b404b8) - org
+#### Miscellaneous Chores
+- npm version to 0.2.1 - (cc9982b) - GitHub Action
+
+- - -
+
 ## 0.2.1 - 2024-10-25
 #### Bug Fixes
 - test refinements - (5efbb62) - org

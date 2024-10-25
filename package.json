@@ -1,9 +1,24 @@
 {
   "name": "bullmq-extra",
   "version": "0.0.0",
-  "description": "",
+  "description": "Additional features and extensions for BullMQ.",
+  "keywords": [
+    "bullmq",
+    "queue",
+    "fanout",
+    "message-queue",
+    "distributed-processing",
+    "nodejs",
+    "pubsub",
+    "job-queue",
+    "parallel-processing",
+    "kafka",
+    "rabbitmq",
+    "redis"
+  ],
   "author": {
-    "name": "Or Gal"
+    "name": "Or Gal",
+    "email": "orrgal@gmail.com"
   },
   "private": false,
   "license": "GPL-3.0",

@@ -59,7 +59,7 @@ jobs:
       - name: Commit and push updated package.json
         if: github.ref == 'refs/heads/main' && steps.release.outputs.version
         run: |
-          git config --local user.email "orrgal1@gmail.com"
+          git config --local user.email "orrgal@gmail.com"
           git config --local user.name "GitHub Action"
           git commit -am "chore: npm version to ${{ steps.release.outputs.version }}"
           git push

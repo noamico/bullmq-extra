@@ -47,7 +47,7 @@ describe('fanout', function () {
 
         for (let iterations = 0; iterations < 5; iterations++) {
           for (let i = 1; i <= jobs; i++) {
-            await producer.produce({ idx: i });
+            await producer.produce({ idx: i * iterations });
           }
           const length = await consumer.getLength();
           expect(length).toBeLessThanOrEqual(jobs * 2); // trimming is not exact but it does happen
@@ -173,7 +173,10 @@ describe('fanout', function () {
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
         }
-        while ((await targetQueues[1].count()) < jobs) {
+        while (
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[1].count()) < jobs
+        ) {
           await delay(50);
         }
         for (const queue of targetQueues) {
@@ -208,7 +211,11 @@ describe('fanout', function () {
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i }, { jobId: `test-${i}` });
         }
-        while ((await targetQueues[1].count()) < jobs) {
+        while (
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[1].count()) < jobs
+        ) {
           await delay(50);
         }
         for (const queue of targetQueues) {
@@ -248,7 +255,10 @@ describe('fanout', function () {
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
         }
-        while ((await targetQueues[1].count()) < jobs) {
+        while (
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[1].count()) < jobs
+        ) {
           await delay(50);
         }
         for (const queue of targetQueues) {
@@ -292,7 +302,10 @@ describe('fanout', function () {
           await sourceQueue.add('default', { idx: i });
         }
 
-        while ((await targetQueues[1].count()) < jobs) {
+        while (
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[1].count()) < jobs
+        ) {
           await delay(50);
         }
         for (const queue of targetQueues) {
@@ -331,7 +344,10 @@ describe('fanout', function () {
           await sourceQueue.add('default', { idx: i });
         }
 
-        while ((await targetQueues[1].count()) < jobs) {
+        while (
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[1].count()) < jobs
+        ) {
           await delay(50);
         }
         await fanout.close();
@@ -346,7 +362,10 @@ describe('fanout', function () {
           await sourceQueue.add('default', { idx: i + 20 });
         }
 
-        while ((await targetQueues[1].count()) < jobs) {
+        while (
+          (await targetQueues[0].count()) < jobs ||
+          (await targetQueues[1].count()) < jobs
+        ) {
           await delay(50);
         }
 

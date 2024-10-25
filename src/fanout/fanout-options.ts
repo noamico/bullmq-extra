@@ -1,4 +1,4 @@
-import { ConnectionOptions, QueueBaseOptions } from 'bullmq';
+import { ConnectionOptions, JobsOptions, QueueBaseOptions } from 'bullmq';
 
 /**
  * Base Consumer options
@@ -49,4 +49,6 @@ export interface FanoutOptions extends QueueBaseOptions {
   maxRetentionMs?: number;
 
   trimIntervalMs?: number;
+
+  optsOverride?: (data: any) => JobsOptions;
 }

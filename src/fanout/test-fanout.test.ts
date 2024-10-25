@@ -118,20 +118,20 @@ describe('fanout', function () {
     describe('when jobs produced with an active fanout', () => {
       it('should fanout to defined queues', async () => {
         const group = `test-${v4()}`;
-        const queueName = `test-${v4()}`;
-        const sourceQueue = new Queue(queueName, {
+        const sourceQueueName = `test-${v4()}`;
+        const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
-        });
-        const fanout = new Fanout(queueName, {
-          connection: consumerConnection,
         });
         const targetQueues = [
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
+        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
+          connection: consumerConnection,
+        });
         const jobs = 10;
 
-        fanout.fanout(group, targetQueues).then();
+        fanout.run().then();
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -155,20 +155,21 @@ describe('fanout', function () {
     describe('when jobs produced with job options', () => {
       it('should set options on target jobs', async () => {
         const group = `test-${v4()}`;
-        const queueName = `test-${v4()}`;
-        const sourceQueue = new Queue(queueName, {
+        const sourceQueueName = `test-${v4()}`;
+        const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
-        });
-        const fanout = new Fanout(queueName, {
-          connection: consumerConnection,
         });
         const targetQueues = [
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
+        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
+          connection: consumerConnection,
+        });
+
         const jobs = 10;
 
-        fanout.fanout(group, targetQueues).then();
+        fanout.run().then();
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i }, { jobId: `test-${i}` });
@@ -191,24 +192,22 @@ describe('fanout', function () {
 
       it('should override options on target jobs', async () => {
         const group = `test-${v4()}`;
-        const queueName = `test-${v4()}`;
-        const sourceQueue = new Queue(queueName, {
+        const sourceQueueName = `test-${v4()}`;
+        const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
-        });
-        const fanout = new Fanout(queueName, {
-          connection: consumerConnection,
         });
         const targetQueues = [
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
+        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
+          connection: consumerConnection,
+          optsOverride: (data) => ({ jobId: `test-${data.idx + 10}` }),
+        });
+
         const jobs = 10;
 
-        fanout
-          .fanout(group, targetQueues, (data: any) => ({
-            jobId: `test-${data.idx + 10}`,
-          }))
-          .then();
+        fanout.run().then();
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -233,24 +232,25 @@ describe('fanout', function () {
     describe('when jobs produced with a late fanout', () => {
       it('should fanout to defined queues', async () => {
         const group = `test-${v4()}`;
-        const queueName = `test-${v4()}`;
-        const sourceQueue = new Queue(queueName, {
+        const sourceQueueName = `test-${v4()}`;
+        const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
-        });
-        const fanout = new Fanout(queueName, {
-          connection: consumerConnection,
         });
         const targetQueues = [
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
+        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
+          connection: consumerConnection,
+        });
+
         const jobs = 10;
 
         for (let i = 1; i <= jobs / 2; i++) {
           await sourceQueue.add('default', { idx: i });
         }
 
-        fanout.fanout(group, targetQueues).then().catch(console.error);
+        fanout.run().then().catch(console.error);
 
         for (let i = jobs / 2 + 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -272,23 +272,23 @@ describe('fanout', function () {
     describe('when fanout is stopped and restarted', () => {
       it('should not consume acked messages', async () => {
         const group = `test-${v4()}`;
-        const queueName = `test-${v4()}`;
-        const sourceQueue = new Queue(queueName, {
+        const sourceQueueName = `test-${v4()}`;
+        const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
-        });
-        const fanout = new Fanout(queueName, {
-          connection: consumerConnection,
         });
         const targetQueues = [
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const laterFanout = new Fanout(queueName, {
+        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
+          connection: consumerConnection,
+        });
+        const laterFanout = new Fanout(sourceQueueName, targetQueues, group, {
           connection: consumerConnection,
         });
         const jobs = 10;
 
-        fanout.fanout(group, targetQueues).then().catch(console.error);
+        fanout.run().then().catch(console.error);
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -299,7 +299,7 @@ describe('fanout', function () {
         }
         await fanout.close();
 
-        laterFanout.fanout(group, targetQueues).then().catch(console.error);
+        laterFanout.run().then().catch(console.error);
 
         for (const queue of targetQueues) {
           await queue.clean(0, 1000, 'wait');

@@ -11,7 +11,12 @@ export class Fanout<DataType = any> {
   private worker: QueueToStreamWorker;
   private closed: Promise<void>;
 
-  constructor(sourceQueue: string, opts?: FanoutOptions) {
+  constructor(
+    sourceQueue: string,
+    private targetQueues: Queue<DataType>[],
+    private group: string,
+    private opts?: FanoutOptions,
+  ) {
     const streamName = `bullmq__fanout__${sourceQueue}`;
     this.consumer = new Consumer(streamName, {
       blockingConnection: false,
@@ -37,17 +42,15 @@ export class Fanout<DataType = any> {
     });
   }
 
-  async fanout(
-    group: string,
-    targetQueues: Queue<DataType>[],
-    optsOverride?: (data: DataType) => JobsOptions,
-  ): Promise<void> {
-    for (const queue of targetQueues) {
-      const groupName = `${group}:${queue.name}`;
+  async run(): Promise<void> {
+    for (const queue of this.targetQueues) {
+      const groupName = `${this.group}:${queue.name}`;
       this.consumer.consume(
         groupName,
         async (data: DataType, opts: JobsOptions) => {
-          const renderedOptsOverride = optsOverride ? optsOverride(data) : {};
+          const renderedOptsOverride = this.opts?.optsOverride
+            ? this.opts.optsOverride(data)
+            : {};
           const mergedOpts = { ...opts, ...renderedOptsOverride };
           await queue.add('default', data, mergedOpts);
           debug('add', queue.name, data);

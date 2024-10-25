@@ -10,17 +10,30 @@ export class Fanout<DataType = any> {
   private consumer: Consumer;
   private worker: QueueToStreamWorker;
   private closed: Promise<void>;
+  private sourceQueue: string;
+  private targetQueues: Queue<DataType>[] = [];
+  private opts?: FanoutOptions = { connection: null };
 
-  constructor(
-    sourceQueue: string,
-    private targetQueues: Queue<DataType>[],
-    private group: string,
-    private opts?: FanoutOptions,
-  ) {
-    const streamName = `bullmq__fanout__${sourceQueue}`;
+  setSource(queueName: string): Fanout {
+    this.sourceQueue = queueName;
+    return this;
+  }
+
+  addTargets(...queues: Queue<DataType>[]): Fanout {
+    this.targetQueues.push(...queues);
+    return this;
+  }
+
+  setOptions(opts: FanoutOptions): Fanout {
+    this.opts = opts;
+    return this;
+  }
+
+  async run(): Promise<void> {
+    const streamName = `bullmq__fanout__${this.sourceQueue}`;
     this.consumer = new Consumer(streamName, {
       blockingConnection: false,
-      ...opts,
+      ...this.opts,
     });
 
     this.consumer
@@ -33,18 +46,20 @@ export class Fanout<DataType = any> {
         // be received by listening to event 'error'
       });
 
-    this.worker = new QueueToStreamWorker(sourceQueue, streamName, opts);
+    this.worker = new QueueToStreamWorker(
+      this.sourceQueue,
+      streamName,
+      this.opts,
+    );
 
     this.closed = new Promise<void>((resolve) => {
       this.consumer.on('close', () => {
         resolve();
       });
     });
-  }
 
-  async run(): Promise<void> {
     for (const queue of this.targetQueues) {
-      const groupName = `${this.group}:${queue.name}`;
+      const groupName = `${this.sourceQueue}:${queue.name}`;
       this.consumer.consume(
         groupName,
         async (data: DataType, opts: JobsOptions) => {
@@ -61,7 +76,7 @@ export class Fanout<DataType = any> {
   }
 
   async close(): Promise<void> {
-    await this.worker.close();
-    await this.consumer.close();
+    await this.worker?.close();
+    await this.consumer?.close();
   }
 }

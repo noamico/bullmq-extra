@@ -44,8 +44,6 @@ export interface FanoutOptions extends QueueBaseOptions {
 
   blockTimeMs?: number;
 
-  startStreamId?: string;
-
   maxRetentionMs?: number;
 
   trimIntervalMs?: number;

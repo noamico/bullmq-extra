@@ -128,7 +128,6 @@ describe('fanout', function () {
   describe('fanout', () => {
     describe('when jobs produced with an active fanout', () => {
       it('should fanout to defined queues', async () => {
-        const group = `test-${v4()}`;
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -137,9 +136,10 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
-          connection: consumerConnection,
-        });
+        const fanout = new Fanout()
+          .setSource(sourceQueueName)
+          .addTargets(...targetQueues)
+          .setOptions({ connection: consumerConnection });
         const jobs = 10;
 
         fanout.run().then();
@@ -165,7 +165,6 @@ describe('fanout', function () {
 
     describe('when jobs produced with job options', () => {
       it('should set options on target jobs', async () => {
-        const group = `test-${v4()}`;
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -174,9 +173,10 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
-          connection: consumerConnection,
-        });
+        const fanout = new Fanout()
+          .setSource(sourceQueueName)
+          .addTargets(...targetQueues)
+          .setOptions({ connection: consumerConnection });
 
         const jobs = 10;
 
@@ -202,7 +202,6 @@ describe('fanout', function () {
       });
 
       it('should override options on target jobs', async () => {
-        const group = `test-${v4()}`;
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -211,10 +210,13 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
-          connection: consumerConnection,
-          optsOverride: (data) => ({ jobId: `test-${data.idx + 10}` }),
-        });
+        const fanout = new Fanout()
+          .setSource(sourceQueueName)
+          .addTargets(...targetQueues)
+          .setOptions({
+            connection: consumerConnection,
+            optsOverride: (data) => ({ jobId: `test-${data.idx + 10}` }),
+          });
 
         const jobs = 10;
 
@@ -242,7 +244,6 @@ describe('fanout', function () {
 
     describe('when jobs produced with a late fanout', () => {
       it('should fanout to defined queues', async () => {
-        const group = `test-${v4()}`;
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -251,9 +252,10 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
-          connection: consumerConnection,
-        });
+        const fanout = new Fanout()
+          .setSource(sourceQueueName)
+          .addTargets(...targetQueues)
+          .setOptions({ connection: consumerConnection });
 
         const jobs = 10;
 
@@ -282,7 +284,6 @@ describe('fanout', function () {
 
     describe('when fanout is stopped and restarted', () => {
       it('should not consume acked messages', async () => {
-        const group = `test-${v4()}`;
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -291,12 +292,14 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout(sourceQueueName, targetQueues, group, {
-          connection: consumerConnection,
-        });
-        const laterFanout = new Fanout(sourceQueueName, targetQueues, group, {
-          connection: consumerConnection,
-        });
+        const fanout = new Fanout()
+          .setSource(sourceQueueName)
+          .addTargets(...targetQueues)
+          .setOptions({ connection: consumerConnection });
+        const laterFanout = new Fanout()
+          .setSource(sourceQueueName)
+          .addTargets(...targetQueues)
+          .setOptions({ connection: consumerConnection });
         const jobs = 10;
 
         fanout.run().then().catch(console.error);

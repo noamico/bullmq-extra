@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.1.1 - 2024-10-25
+#### Bug Fixes
+- cicd - (35cd444) - org
+
+- - -
+
 ## 0.1.0 - 2024-10-25
 #### Features
 - redis test container - (483fc2f) - org

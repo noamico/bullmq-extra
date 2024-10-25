@@ -6,9 +6,6 @@ import * as proxy from 'node-tcp-proxy';
 import { Consumer } from './consumer';
 import { Producer } from './producer';
 import { Fanout } from './fanout';
-import * as _debug from 'debug';
-
-const debug = _debug('bullmq:fanout:test');
 
 jest.setTimeout(60000);
 
@@ -179,16 +176,13 @@ describe('fanout', function () {
         while ((await targetQueues[1].count()) < jobs) {
           await delay(50);
         }
-        debug('test.targetQueues.done');
         for (const queue of targetQueues) {
           expect(await queue.count()).toEqual(jobs);
           expect((await queue.getWaiting()).map((job) => job.data.idx)).toEqual(
             Array.from(Array(jobs).keys()).map((i) => i + 1),
           );
         }
-        debug('test.expect.done');
         await fanout.close();
-        debug('test.done');
       });
     });
 

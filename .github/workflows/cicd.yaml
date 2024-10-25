@@ -50,8 +50,6 @@ jobs:
         with:
           check-latest-tag-only: true
           release: true
-          git-user: 'Cog Bot'
-          git-user-email: 'cogbot@appstack-io'
 
       - name: Update package.json version
         if: github.ref == 'refs/heads/main' && steps.release.outputs.version
@@ -60,7 +58,7 @@ jobs:
       - name: Commit and push updated package.json
         if: github.ref == 'refs/heads/main' && steps.release.outputs.version
         run: |
-          git config --local user.email "action@appstack-io"
+          git config --local user.email "orrgal1@gmail.com"
           git config --local user.name "GitHub Action"
           git commit -am "chore: bump version to $(cat package.json | jq -r .version)"
           git push
@@ -68,6 +66,6 @@ jobs:
       - name: Publish
         if: github.ref == 'refs/heads/main' && steps.release.outputs.version
         run: |
-          echo $APPSTACKIO_NPM_TOKEN
+          echo $NPM_TOKEN
           cat .npmrc
           npm publish

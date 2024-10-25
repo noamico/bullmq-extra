@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.2.1 - 2024-10-25
+#### Bug Fixes
+- test refinements - (5efbb62) - org
+- test batchSize - (50e48f7) - org
+- test batchSize - (1bd9bc3) - org
+#### Miscellaneous Chores
+- npm version to 0.2.0 - (afe0af2) - GitHub Action
+
+- - -
+
 ## 0.2.0 - 2024-10-25
 #### Bug Fixes
 - test batchSize - (7dc0708) - org

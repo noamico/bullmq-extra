@@ -2,6 +2,16 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.2.0 - 2024-10-25
+#### Bug Fixes
+- test batchSize - (7dc0708) - org
+#### Features
+- more elegant interface - (57c2b91) - org
+#### Miscellaneous Chores
+- npm version to 0.1.5 - (adb0096) - GitHub Action
+
+- - -
+
 ## 0.1.5 - 2024-10-25
 #### Bug Fixes
 - change to MIT - (64729d4) - org

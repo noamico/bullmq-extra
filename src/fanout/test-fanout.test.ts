@@ -59,6 +59,36 @@ describe('fanout', function () {
 
         await consumer.close();
       });
+
+      it('should respect batchSize', async () => {
+        const streamName = `test-${v4()}`;
+        const consumerGroup = `test-${v4()}`;
+        const producer = new Producer(streamName, {
+          connection: generalConnection,
+        });
+        const consumer = new Consumer(streamName, {
+          connection: consumerConnection,
+          maxRetentionMs: 100,
+          trimIntervalMs: 100,
+          batchSize: 10,
+        });
+        const jobs = 10;
+        const processed: any[] = [];
+        consumer.consume(consumerGroup, async (job) => {
+          processed.push(job);
+        });
+
+        for (let iterations = 0; iterations < 5; iterations++) {
+          for (let i = 1; i <= jobs; i++) {
+            await producer.produce({ idx: i });
+          }
+          const length = await consumer.getLength();
+          expect(length).toBeLessThanOrEqual(jobs * 2); // trimming is not exact but it does happen
+          await delay(1000);
+        }
+
+        await consumer.close();
+      });
     });
 
     describe('when jobs produced with an active consumer', () => {

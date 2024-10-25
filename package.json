@@ -21,7 +21,7 @@
     "email": "orrgal@gmail.com"
   },
   "private": false,
-  "license": "GPL-3.0",
+  "license": "MIT",
   "repository": "https://github.com/orrgal1/bullmq-extra",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

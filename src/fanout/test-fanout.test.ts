@@ -1,6 +1,8 @@
 import { v4 } from 'uuid';
 import { default as IORedis } from 'ioredis';
 import { delay, Queue } from 'bullmq';
+import { GenericContainer, Wait } from 'testcontainers';
+import * as proxy from 'node-tcp-proxy';
 import { Consumer } from './consumer';
 import { Producer } from './producer';
 import { Fanout } from './fanout';
@@ -8,12 +10,21 @@ import * as _debug from 'debug';
 
 const debug = _debug('bullmq:fanout:test');
 
-jest.setTimeout(10000);
+jest.setTimeout(60000);
 
 describe('fanout', function () {
   let consumerConnection: IORedis;
   let generalConnection: IORedis;
   beforeAll(async function () {
+    const redisContainerSetup = new GenericContainer('redis:7.4.0')
+      .withExposedPorts(6379)
+      .withWaitStrategy(
+        Wait.forLogMessage(/.*Ready to accept connections tcp.*/, 1),
+      );
+    const redisContainer = await redisContainerSetup.start();
+    const mappedPort = redisContainer.getMappedPort(6379);
+    proxy.createProxy(6379, 'localhost', mappedPort);
+
     consumerConnection = new IORedis({ maxRetriesPerRequest: null });
     generalConnection = new IORedis({ maxRetriesPerRequest: null });
   });

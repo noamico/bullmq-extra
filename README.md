@@ -18,7 +18,6 @@ Broadcast a job to multiple queues, ideal for implementing publish-subscribe mod
 ```typescript
 import { Queue, Worker } from 'bullmq';
 import { Fanout } from 'bullmq-extra';
-import { source } from '@angular-devkit/schematics';
 
 // Create a source queue somewhere in your application
 const sourceQueue = new Queue('queue1');

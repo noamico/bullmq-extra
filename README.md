@@ -52,4 +52,6 @@ fanout2.run().then().catch();
 
 **optsOverride:** A function that takes the job data and returns an object with options to override the default options for the job.
 
-
+### Caution:
+ - Do not use the same queue as both a source and target queue in a fanout. This can lead to infinite loops.
+ - Do not use the same queue as a target queue in multiple fanouts unless you really intend to. This can lead to job duplication.

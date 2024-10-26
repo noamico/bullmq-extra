@@ -1,19 +1,19 @@
 import { JobsOptions, QueueBase, RedisClient, RedisConnection } from 'bullmq';
-import { PubsubOptions } from './pubsub-options';
+import { RouterOptions } from './router-options';
 import { v4 } from 'uuid';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:pubsub:consumer');
+const debug = _debug('bullmq:router:consumer');
 
 type XReadGroupResult = [string, [string, string[]][]];
 
 export class Consumer<DataType = any> extends QueueBase {
-  protected consumerOpts: PubsubOptions;
+  protected consumerOpts: RouterOptions;
   private lastTrim = 0;
 
   constructor(
     streamName: string,
-    opts?: PubsubOptions,
+    opts?: RouterOptions,
     Connection?: typeof RedisConnection,
   ) {
     super(

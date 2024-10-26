@@ -2,7 +2,7 @@ import { Job, RedisConnection, Worker, WorkerOptions } from 'bullmq';
 import { Producer } from './producer';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:pubsub:queue-to-stream-worker');
+const debug = _debug('bullmq:router:queue-to-stream-worker');
 
 export class QueueToStreamWorker extends Worker {
   constructor(

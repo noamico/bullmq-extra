@@ -2,7 +2,7 @@ import { JobsOptions, QueueBase, RedisConnection } from 'bullmq';
 import { ProducerOptions } from './producer-options';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:pubsub:producer');
+const debug = _debug('bullmq:router:producer');
 
 export class Producer<DataType = any> extends QueueBase {
   constructor(

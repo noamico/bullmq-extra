@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.3.0 - 2024-10-26
+#### Features
+- renamed to PubSub - (943a382) - org
+#### Miscellaneous Chores
+- npm version to 0.2.2 - (ea9ca1a) - GitHub Action
+
+- - -
+
 ## 0.2.2 - 2024-10-25
 #### Bug Fixes
 - readme refinements - (3b404b8) - org

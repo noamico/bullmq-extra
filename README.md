@@ -58,11 +58,11 @@ pubsub2.run().then().catch();
  - Do not use the same queue as both a source and target queue in a pubsub. This can lead to infinite loops.
  - Do not use the same queue as a target queue in multiple pubsubs unless you really intend to. This can lead to job duplication.
 
-### Roadmap:
+## Roadmap:
  - **Joins:** Create joins between queues and output the result to a new queue.
  - **Aggregations:** Accumulate messages from a queue and output aggregations to a new queue.
  - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate package or several.
 
-### Contributing:
+## Contributing:
  - Feel free to open issues or fork and open pull requests. We are open to suggestions and improvements.
  - We are looking for maintainers to help us with the project.

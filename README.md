@@ -57,6 +57,7 @@ pubsub2.run().then().catch();
 ### Caution:
  - Do not use the same queue as both a source and target queue in a pubsub. This can lead to infinite loops.
  - Do not use the same queue as a target queue in multiple pubsubs unless you really intend to. This can lead to job duplication.
+ - The package is new so breaking changes are to be expected until version 1.0.0.
 
 ## Roadmap:
  - **Joins:** Create joins between queues and output the result to a new queue.

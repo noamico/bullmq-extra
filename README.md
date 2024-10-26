@@ -44,15 +44,15 @@ pubsub2.run().then().catch();
 
 ### Advanced Options (`PubsubOptions`):
 
-**batchSize:** The number of jobs to process in a single batch. Default is 1.
+- **batchSize:** The number of jobs to process in a single batch. Default is 1.
 
-**blockTimeMs:** The time to wait before polling after an empty batch. Default is 1 second.
+- **blockTimeMs:** The time to wait before polling after an empty batch. Default is 1 second.
 
-**maxRetentionMs:** The maximum time to retain a job in the pubsub stream. Default is 24 hours.
+- **maxRetentionMs:** The maximum time to retain a job in the pubsub stream. Default is 24 hours.
 
-**trimIntervalMs:** The interval in which to trim the pubsub stream. Default is 1 minute.
+- **trimIntervalMs:** The interval in which to trim the pubsub stream. Default is 1 minute.
 
-**optsOverride:** A function that takes the job data and returns an object with options to override the default options for the job.
+- **optsOverride:** A function that takes the job data and returns an object with options to override the default options for the job.
 
 ### Caution:
  - Do not use the same queue as both a source and target queue in a pubsub. This can lead to infinite loops.

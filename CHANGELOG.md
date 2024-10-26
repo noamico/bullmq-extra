@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.6.0 - 2024-10-26
+#### Features
+- readme refinement - (4ab59a2) - org
+#### Miscellaneous Chores
+- npm version to 0.5.0 - (fe51500) - GitHub Action
+
+- - -
+
 ## 0.5.0 - 2024-10-26
 #### Features
 - readme refinement - (8b0fd0b) - org

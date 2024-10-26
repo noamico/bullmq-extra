@@ -9,7 +9,7 @@
     "message-queue",
     "distributed-processing",
     "nodejs",
-    "pubsub",
+    "fanout",
     "job-queue",
     "parallel-processing",
     "kafka",

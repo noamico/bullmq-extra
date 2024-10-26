@@ -41,8 +41,8 @@ const router1 = new Router()
 router1.run().then().catch();
 
 // Create multiple routers on the same source queues to different targets
-const targetQueue3 = new Queue('queue4');
-const targetQueue4 = new Queue('queue5');
+const targetQueue3 = new Queue('target3');
+const targetQueue4 = new Queue('target4');
 const router2 = new Router()
   .addSources('source1')
   .addTargets(targetQueue3,targetQueue4);

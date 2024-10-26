@@ -14,7 +14,8 @@
     "parallel-processing",
     "kafka",
     "rabbitmq",
-    "redis"
+    "redis",
+    "redis-streams"
   ],
   "author": {
     "name": "Or Gal",

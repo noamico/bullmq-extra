@@ -29,7 +29,7 @@ export interface ConsumerBaseOptions {
 /**
  * Options for the Consumer class.
  */
-export interface FanoutOptions extends QueueBaseOptions {
+export interface PubsubOptions extends QueueBaseOptions {
   /**
    * Skip Meta update.
    *

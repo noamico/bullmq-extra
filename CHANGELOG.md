@@ -68,10 +68,10 @@ All notable changes to this project will be documented in this file. See [conven
 ## 0.0.0 - 2024-10-25
 #### Features
 - cicd - (fca21f0) - org
-- fanout complete - (bb29410) - org
-- fanout complete - (889449f) - org
-- fanout complete - (8d2fc70) - org
-- fanout complete - (fb8a3b4) - org
+- pubsub complete - (bb29410) - org
+- pubsub complete - (889449f) - org
+- pubsub complete - (8d2fc70) - org
+- pubsub complete - (fb8a3b4) - org
 - init - (a504379) - org
 - init - (abcde83) - org
 

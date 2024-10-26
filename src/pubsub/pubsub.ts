@@ -1,36 +1,36 @@
 import { JobsOptions, Queue } from 'bullmq';
-import { FanoutOptions } from './fanout-options';
+import { PubsubOptions } from './pubsub-options';
 import { Consumer } from './consumer';
 import { QueueToStreamWorker } from './queue-to-stream-worker';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:fanout:fanout');
+const debug = _debug('bullmq:pubsub:pubsub');
 
-export class Fanout<DataType = any> {
+export class Pubsub<DataType = any> {
   private consumer: Consumer;
   private worker: QueueToStreamWorker;
   private closed: Promise<void>;
   private sourceQueue: string;
   private targetQueues: Queue<DataType>[] = [];
-  private opts?: FanoutOptions = { connection: null };
+  private opts?: PubsubOptions = { connection: null };
 
-  setSource(queueName: string): Fanout {
+  setSource(queueName: string): Pubsub {
     this.sourceQueue = queueName;
     return this;
   }
 
-  addTargets(...queues: Queue<DataType>[]): Fanout {
+  addTargets(...queues: Queue<DataType>[]): Pubsub {
     this.targetQueues.push(...queues);
     return this;
   }
 
-  setOptions(opts: FanoutOptions): Fanout {
+  setOptions(opts: PubsubOptions): Pubsub {
     this.opts = opts;
     return this;
   }
 
   async run(): Promise<void> {
-    const streamName = `bullmq__fanout__${this.sourceQueue}`;
+    const streamName = `bullmq__pubsub__${this.sourceQueue}`;
     this.consumer = new Consumer(streamName, {
       blockingConnection: false,
       ...this.opts,

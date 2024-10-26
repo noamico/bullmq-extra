@@ -5,11 +5,11 @@ import { GenericContainer, Wait } from 'testcontainers';
 import * as proxy from 'node-tcp-proxy';
 import { Consumer } from './consumer';
 import { Producer } from './producer';
-import { Fanout } from './fanout';
+import { Pubsub } from './pubsub';
 
 jest.setTimeout(60000);
 
-describe('fanout', function () {
+describe('pubsub', function () {
   let consumerConnection: IORedis;
   let generalConnection: IORedis;
   beforeAll(async function () {
@@ -151,9 +151,9 @@ describe('fanout', function () {
     });
   });
 
-  describe('fanout', () => {
-    describe('when jobs produced with an active fanout', () => {
-      it('should fanout to defined queues', async () => {
+  describe('pubsub', () => {
+    describe('when jobs produced with an active pubsub', () => {
+      it('should pubsub to defined queues', async () => {
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -162,13 +162,13 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout()
+        const pubsub = new Pubsub()
           .setSource(sourceQueueName)
           .addTargets(...targetQueues)
           .setOptions({ connection: consumerConnection });
         const jobs = 10;
 
-        fanout.run().then();
+        pubsub.run().then();
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -185,7 +185,7 @@ describe('fanout', function () {
             Array.from(Array(jobs).keys()).map((i) => i + 1),
           );
         }
-        await fanout.close();
+        await pubsub.close();
       });
     });
 
@@ -199,14 +199,14 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout()
+        const pubsub = new Pubsub()
           .setSource(sourceQueueName)
           .addTargets(...targetQueues)
           .setOptions({ connection: consumerConnection });
 
         const jobs = 10;
 
-        fanout.run().then();
+        pubsub.run().then();
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i }, { jobId: `test-${i}` });
@@ -228,7 +228,7 @@ describe('fanout', function () {
             })),
           );
         }
-        await fanout.close();
+        await pubsub.close();
       });
 
       it('should override options on target jobs', async () => {
@@ -240,7 +240,7 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout()
+        const pubsub = new Pubsub()
           .setSource(sourceQueueName)
           .addTargets(...targetQueues)
           .setOptions({
@@ -250,7 +250,7 @@ describe('fanout', function () {
 
         const jobs = 10;
 
-        fanout.run().then();
+        pubsub.run().then();
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -271,12 +271,12 @@ describe('fanout', function () {
             })),
           );
         }
-        await fanout.close();
+        await pubsub.close();
       });
     });
 
-    describe('when jobs produced with a late fanout', () => {
-      it('should fanout to defined queues', async () => {
+    describe('when jobs produced with a late pubsub', () => {
+      it('should pubsub to defined queues', async () => {
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
           connection: generalConnection,
@@ -285,7 +285,7 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout()
+        const pubsub = new Pubsub()
           .setSource(sourceQueueName)
           .addTargets(...targetQueues)
           .setOptions({ connection: consumerConnection });
@@ -296,7 +296,7 @@ describe('fanout', function () {
           await sourceQueue.add('default', { idx: i });
         }
 
-        fanout.run().then().catch(console.error);
+        pubsub.run().then().catch(console.error);
 
         for (let i = jobs / 2 + 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -314,11 +314,11 @@ describe('fanout', function () {
             Array.from(Array(jobs).keys()).map((i) => i + 1),
           );
         }
-        await fanout.close();
+        await pubsub.close();
       });
     });
 
-    describe('when fanout is stopped and restarted', () => {
+    describe('when pubsub is stopped and restarted', () => {
       it('should not consume acked messages', async () => {
         const sourceQueueName = `test-${v4()}`;
         const sourceQueue = new Queue(sourceQueueName, {
@@ -328,17 +328,17 @@ describe('fanout', function () {
           new Queue(`test-${v4()}`, { connection: generalConnection }),
           new Queue(`test-${v4()}`, { connection: generalConnection }),
         ];
-        const fanout = new Fanout()
+        const pubsub = new Pubsub()
           .setSource(sourceQueueName)
           .addTargets(...targetQueues)
           .setOptions({ connection: consumerConnection });
-        const laterFanout = new Fanout()
+        const laterPubsub = new Pubsub()
           .setSource(sourceQueueName)
           .addTargets(...targetQueues)
           .setOptions({ connection: consumerConnection });
         const jobs = 10;
 
-        fanout.run().then().catch(console.error);
+        pubsub.run().then().catch(console.error);
 
         for (let i = 1; i <= jobs; i++) {
           await sourceQueue.add('default', { idx: i });
@@ -350,9 +350,9 @@ describe('fanout', function () {
         ) {
           await delay(50);
         }
-        await fanout.close();
+        await pubsub.close();
 
-        laterFanout.run().then().catch(console.error);
+        laterPubsub.run().then().catch(console.error);
 
         for (const queue of targetQueues) {
           await queue.clean(0, 1000, 'wait');
@@ -375,7 +375,7 @@ describe('fanout', function () {
             Array.from(Array(jobs).keys()).map((i) => i + 1 + 20),
           );
         }
-        await laterFanout.close();
+        await laterPubsub.close();
       });
     });
   });

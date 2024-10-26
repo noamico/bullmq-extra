@@ -1,1 +1,1 @@
-export * from './fanout';
+export * from './pubsub';

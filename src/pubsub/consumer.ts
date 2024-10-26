@@ -1,19 +1,19 @@
 import { JobsOptions, QueueBase, RedisClient, RedisConnection } from 'bullmq';
-import { FanoutOptions } from './fanout-options';
+import { PubsubOptions } from './pubsub-options';
 import { v4 } from 'uuid';
 import * as _debug from 'debug';
 
-const debug = _debug('bullmq:fanout:consumer');
+const debug = _debug('bullmq:pubsub:consumer');
 
 type XReadGroupResult = [string, [string, string[]][]];
 
 export class Consumer<DataType = any> extends QueueBase {
-  protected consumerOpts: FanoutOptions;
+  protected consumerOpts: PubsubOptions;
   private lastTrim = 0;
 
   constructor(
     streamName: string,
-    opts?: FanoutOptions,
+    opts?: PubsubOptions,
     Connection?: typeof RedisConnection,
   ) {
     super(

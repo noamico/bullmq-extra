@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.8.0 - 2024-10-26
+#### Features
+- readme refinement - (960c780) - org
+#### Miscellaneous Chores
+- npm version to 0.7.0 - (b4fa792) - GitHub Action
+
+- - -
+
 ## 0.7.0 - 2024-10-26
 #### Features
 - readme refinement - (5cfd59a) - org

@@ -72,7 +72,7 @@ router2.run().then().catch();
  - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate package or several.
 
 ## Contributing:
- - Feel free to open issues for questions, suggestions and feedback.
+ - Feel free to open issues for questions, suggestions and feedback. And Issues...
  - To contribute code just fork and open pull requests.
 
  ## Thanks! 🚀

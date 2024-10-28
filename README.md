@@ -68,6 +68,7 @@ router2.run().then().catch();
 ## Roadmap:
  - **Joins:** Create joins between queues and output the result to a new queue.
  - **Aggregations:** Accumulate messages from a queue and output aggregations to a new queue.
+ - **Request-Reply:** Implement request-reply patterns with BullMQ.
  - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate package or several.
 
 ## Contributing:

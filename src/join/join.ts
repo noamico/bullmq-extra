@@ -1,5 +1,9 @@
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
+import BottleNeck from 'bottleneck';
+import * as _debug from 'debug';
+
+const debug = _debug('bullmq:join');
 
 export type Source<DataType = any> = {
   queue: string;
@@ -9,28 +13,33 @@ export type Source<DataType = any> = {
 export class Join<ResultType = any> {
   private timeoutQueue: Queue;
   private redis: Redis;
-  private group: string;
+  private joinName: string;
   private timeout?: number;
   private onComplete: (data: { queue: string; val: any }[]) => ResultType;
   private sources: Source[];
   private target: Queue<ResultType>;
+  private limiter: BottleNeck.Group;
 
   constructor(opts: {
     redis: Redis;
-    group: string;
+    joinName: string;
     timeout?: number;
     onComplete: (data: { queue: string; val: any }[]) => ResultType;
     sources: Source[];
     target: Queue<ResultType>;
   }) {
     this.redis = opts.redis;
-    this.group = opts.group;
+    this.joinName = opts.joinName;
     this.timeout = opts.timeout;
     this.onComplete = opts.onComplete;
     this.sources = opts.sources;
     this.target = opts.target;
-    this.timeoutQueue = new Queue(`bullmq__join:timeout:${this.group}`, {
+    this.timeoutQueue = new Queue(`bullmq__join__timeout__${this.joinName}`, {
       connection: this.redis,
+    });
+    this.limiter = new BottleNeck.Group({
+      maxConcurrent: 1,
+      Redis: this.redis,
     });
   }
 
@@ -40,11 +49,15 @@ export class Join<ResultType = any> {
         source.queue,
         async (job) => {
           const data = job.data;
+          const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinkey(data)}`;
           await this.storeData(source, data);
-          const result = await this.evaluateJoin(source.getJoinkey(data));
-          if (result) {
-            await this.target.add('completed', result);
-          }
+          await this.limiter.key(limiterKey).schedule(async () => {
+            const result = await this.evaluateJoin(source.getJoinkey(data));
+            if (result) {
+              debug('completed', result);
+              await this.target.add('completed', result);
+            }
+          });
         },
         {
           connection: this.redis,
@@ -56,10 +69,14 @@ export class Join<ResultType = any> {
       async (job) => {
         const data = job.data;
         const { joinKey } = data;
-        const result = await this.evaluateJoin(joinKey, true);
-        if (result) {
-          await this.target.add('completed', result);
-        }
+        const limiterKey = `bullmq__join:limiter:${this.joinName}:${joinKey}`;
+        await this.limiter.key(limiterKey).schedule(async () => {
+          const result = await this.evaluateJoin(joinKey, true);
+          if (result) {
+            debug('timeout', result);
+            await this.target.add('completed', result);
+          }
+        });
       },
       {
         connection: this.redis,
@@ -69,7 +86,7 @@ export class Join<ResultType = any> {
 
   private async storeData(source: Source, data: any) {
     const joinKey = source.getJoinkey(data);
-    const storeKey = `bullmq__join:${this.group}:${joinKey}:${source.queue}`;
+    const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));
     await this.redis.expire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);
   }
@@ -78,21 +95,34 @@ export class Join<ResultType = any> {
     joinKey: string,
     terminate?: boolean,
   ): Promise<ResultType | void> {
-    const allStored = await Promise.all(
-      this.sources.map(async (source) => {
-        const val = await this.redis.get(
-          `bullmq__join:${this.group}:${joinKey}:${source.queue}`,
-        );
-        return { queue: source.queue, val };
-      }),
-    );
+    const completionKey = `bullmq__join:isComplete:${this.joinName}:${joinKey}`;
+    const isComplete = await this.redis.exists(completionKey);
+    if (isComplete) {
+      return;
+    }
+    const allStored = (
+      await Promise.all(
+        this.sources.map(async (source) => {
+          const val = await this.redis.get(
+            `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`,
+          );
+          return { queue: source.queue, val };
+        }),
+      )
+    ).filter((stored) => stored.val);
 
     if (allStored.length === this.sources.length || terminate) {
       const data = allStored.map((stored) => ({
         queue: stored.queue,
         val: JSON.parse(stored.val),
       }));
-      return this.onComplete(data);
+      const result = this.onComplete(data);
+      await this.redis.set(completionKey, '1');
+      await this.redis.expire(
+        completionKey,
+        (this.timeout || 1000 * 60 * 60) * 2,
+      );
+      return result;
     }
 
     if (allStored.length === 1) {

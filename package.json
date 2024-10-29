@@ -39,6 +39,7 @@
     "deps:upgrade": "npx npm-check-updates -u -x eslint && npm i"
   },
   "dependencies": {
+    "bottleneck": "^2.19.5",
     "bullmq": "^5.21.2",
     "debug": "^4.3.7",
     "uuid": "^10.0.0"

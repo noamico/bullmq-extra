@@ -33,7 +33,7 @@ export class Router<DataType = any> {
   async run(): Promise<void> {
     try {
       for (const sourceQueue of this.sourceQueues) {
-        const streamName = `bullmq__router:${sourceQueue}`;
+        const streamName = `bullmq__router_${sourceQueue}`;
         const consumer = new Consumer(streamName, {
           blockingConnection: false,
           ...this.opts,

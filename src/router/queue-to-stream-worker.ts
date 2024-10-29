@@ -13,7 +13,7 @@ export class QueueToStreamWorker extends Worker {
   ) {
     const producer = new Producer(
       streamName,
-      { connection: undefined },
+      { connection: undefined, ...opts },
       Connection,
     );
     const processor = async (job: Job) => {

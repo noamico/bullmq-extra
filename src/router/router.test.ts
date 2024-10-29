@@ -2,7 +2,6 @@ import { v4 } from 'uuid';
 import { default as IORedis } from 'ioredis';
 import { delay, Queue } from 'bullmq';
 import { GenericContainer, Wait } from 'testcontainers';
-import * as proxy from 'node-tcp-proxy';
 import { Consumer } from './consumer';
 import { Producer } from './producer';
 import { Router } from './router';
@@ -20,10 +19,14 @@ describe('router', function () {
       );
     const redisContainer = await redisContainerSetup.start();
     const mappedPort = redisContainer.getMappedPort(6379);
-    proxy.createProxy(6379, 'localhost', mappedPort);
-
-    consumerConnection = new IORedis({ maxRetriesPerRequest: null });
-    generalConnection = new IORedis({ maxRetriesPerRequest: null });
+    consumerConnection = new IORedis({
+      port: mappedPort,
+      maxRetriesPerRequest: null,
+    });
+    generalConnection = new IORedis({
+      port: mappedPort,
+      maxRetriesPerRequest: null,
+    });
   });
 
   describe('produce-consume', () => {
@@ -217,7 +220,6 @@ describe('router', function () {
             );
           }
           while (
-            (await targetQueues[0].count()) < jobs ||
             (await targetQueues[0].count()) < jobs ||
             (await targetQueues[1].count()) < jobs
           ) {

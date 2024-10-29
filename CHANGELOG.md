@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.10.1 - 2024-10-28
+#### Bug Fixes
+- readme refinements - (ec4be27) - org
+- readme refinements - (0c4a706) - org
+#### Miscellaneous Chores
+- npm version to 0.10.0 - (dafb73f) - GitHub Action
+
+- - -
+
 ## 0.10.0 - 2024-10-26
 #### Features
 - renamed PubSub to Router and expanded to many->many - (29dd6a7) - org

@@ -7,7 +7,7 @@ const debug = _debug('bullmq:join');
 
 export type Source<DataType = any> = {
   queue: string;
-  getJoinkey: (data: DataType) => string;
+  getJoinKey: (data: DataType) => string;
 };
 
 export class Join<ResultType = any> {
@@ -49,10 +49,10 @@ export class Join<ResultType = any> {
         source.queue,
         async (job) => {
           const data = job.data;
-          const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinkey(data)}`;
+          const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinKey(data)}`;
           await this.storeData(source, data);
           await this.limiter.key(limiterKey).schedule(async () => {
-            const result = await this.evaluateJoin(source.getJoinkey(data));
+            const result = await this.evaluateJoin(source.getJoinKey(data));
             if (result) {
               debug('completed', result);
               await this.target.add('completed', result);
@@ -85,7 +85,7 @@ export class Join<ResultType = any> {
   }
 
   private async storeData(source: Source, data: any) {
-    const joinKey = source.getJoinkey(data);
+    const joinKey = source.getJoinKey(data);
     const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));
     await this.redis.expire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);

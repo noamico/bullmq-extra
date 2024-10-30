@@ -33,13 +33,13 @@ describe('join', function () {
           queue: new Queue(`test-${v4()}`, {
             connection: generalConnection,
           }),
-          getJoinkey: (data) => data.joinKey,
+          getJoinKey: (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
             connection: generalConnection,
           }),
-          getJoinkey: (data) => data.joinKey,
+          getJoinKey: (data) => data.joinKey,
         },
       ];
 
@@ -54,7 +54,7 @@ describe('join', function () {
         redis: generalConnection,
         sources: sources.map((source) => ({
           queue: source.queue.name,
-          getJoinkey: source.getJoinkey,
+          getJoinKey: source.getJoinKey,
         })),
         target,
         timeout: 10000,
@@ -98,13 +98,13 @@ describe('join', function () {
           queue: new Queue(`test-${v4()}`, {
             connection: generalConnection,
           }),
-          getJoinkey: (data) => data.joinKey,
+          getJoinKey: (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
             connection: generalConnection,
           }),
-          getJoinkey: (data) => data.joinKey,
+          getJoinKey: (data) => data.joinKey,
         },
       ];
 
@@ -119,7 +119,7 @@ describe('join', function () {
         redis: generalConnection,
         sources: sources.map((source) => ({
           queue: source.queue.name,
-          getJoinkey: source.getJoinkey,
+          getJoinKey: source.getJoinKey,
         })),
         target,
         timeout: 10,
@@ -161,7 +161,7 @@ describe('join', function () {
           queue: new Queue(`test-${v4()}`, {
             connection: generalConnection,
           }),
-          getJoinkey: (data) => data.joinKey,
+          getJoinKey: (data) => data.joinKey,
         },
       ];
 
@@ -176,7 +176,7 @@ describe('join', function () {
         redis: generalConnection,
         sources: sources.map((source) => ({
           queue: source.queue.name,
-          getJoinkey: source.getJoinkey,
+          getJoinKey: source.getJoinKey,
         })),
         target,
         timeout: 10000,

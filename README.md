@@ -1,6 +1,6 @@
 # BullMQ Extra
 
-BullMQ Extra is a set of additional features and extensions for BullMQ, designed to enhance message queue handling in Node.js. 
+BullMQ Extra is a set of additional features and extensions for the much beloved [BullMQ](https://www.npmjs.com/package/bullmq). 
 The library currently provides specialized patterns like Routing and Joining, with more useful features to come which are currently not available in the core BullMQ library.
 
 ## Installation:

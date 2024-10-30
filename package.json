@@ -15,7 +15,8 @@
     "kafka",
     "rabbitmq",
     "redis",
-    "redis-streams"
+    "redis-streams",
+    "stream-joins"
   ],
   "author": {
     "name": "Or Gal",

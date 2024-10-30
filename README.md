@@ -63,7 +63,8 @@ router2.run().then().catch();
 - **optsOverride:** A function that takes the job data and returns an object with options to override the default options for the job.
 
 ## Join:
-Join allows you to combine jobs from multiple queues into a single queue.
+`Join` allows you to combine jobs from multiple queues into a single queue while joining them on a common key. 
+This is a common pattern in ETL and data processing pipelines and is now available for BullMQ users as well.
 
 ### Basic Usage:
 

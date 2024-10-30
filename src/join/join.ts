@@ -1,6 +1,6 @@
-import { Queue, Worker } from 'bullmq';
-import { Redis } from 'ioredis';
+import { ConnectionOptions, Queue, Worker } from 'bullmq';
 import BottleNeck from 'bottleneck';
+import * as IORedis from 'ioredis';
 import * as _debug from 'debug';
 
 const debug = _debug('bullmq:join');
@@ -12,31 +12,32 @@ export type Source<DataType = any> = {
 
 export class Join<ResultType = any> {
   private timeoutQueue: Queue;
-  private redis: Redis;
   private joinName: string;
   private timeout?: number;
   private onComplete: (data: { queue: string; val: any }[]) => ResultType;
   private sources: Source[];
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
+  private redis: IORedis.Redis | IORedis.Cluster;
 
   constructor(opts: {
-    redis: Redis;
+    opts: { connection: ConnectionOptions };
     joinName: string;
     timeout?: number;
     onComplete: (data: { queue: string; val: any }[]) => ResultType;
     sources: Source[];
     target: Queue<ResultType>;
   }) {
-    this.redis = opts.redis;
     this.joinName = opts.joinName;
     this.timeout = opts.timeout;
     this.onComplete = opts.onComplete;
     this.sources = opts.sources;
     this.target = opts.target;
-    this.timeoutQueue = new Queue(`bullmq__join__timeout__${this.joinName}`, {
-      connection: this.redis,
-    });
+    this.timeoutQueue = new Queue(
+      `bullmq__join__timeout__${this.joinName}`,
+      opts.opts,
+    );
+    this.redis = this.getIORedisInstance(opts.opts.connection);
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
       Redis: this.redis,
@@ -131,6 +132,21 @@ export class Join<ResultType = any> {
         { joinKey },
         { delay: this.timeout || 1000 * 60 * 60 },
       );
+    }
+  }
+
+  getIORedisInstance(
+    connection: ConnectionOptions,
+  ): IORedis.Redis | IORedis.Cluster {
+    if (
+      connection instanceof IORedis.Redis ||
+      connection instanceof IORedis.Cluster
+    ) {
+      return connection;
+    } else if (Array.isArray(connection)) {
+      return new IORedis.Cluster(connection);
+    } else {
+      return new IORedis.Redis(connection);
     }
   }
 }

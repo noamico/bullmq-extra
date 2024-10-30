@@ -16,7 +16,10 @@
     "rabbitmq",
     "redis",
     "redis-streams",
-    "stream-joins"
+    "stream-joins",
+    "stream-merges",
+    "stream-aggregations",
+    "streams"
   ],
   "author": {
     "name": "Or Gal",

@@ -134,7 +134,7 @@ const accumulation = new Accumulation({
   },
   target: new Queue('target1'),
   timeout: 1000,
-  expectedItems: 20,
+  expectedItems: 2,
 });
 accumulation.run();
 

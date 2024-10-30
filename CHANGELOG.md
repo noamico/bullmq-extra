@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.11.3 - 2024-10-30
+#### Bug Fixes
+- join docs in readme - (3ccb1a0) - org
+#### Miscellaneous Chores
+- npm version to 0.11.2 - (f96657f) - GitHub Action
+
+- - -
+
 ## 0.11.2 - 2024-10-30
 #### Bug Fixes
 - join docs in readme - (49d50af) - org

@@ -1,6 +1,7 @@
 # BullMQ Extra
 
-BullMQ Extra is a set of additional features and extensions for BullMQ, designed to enhance message queue handling in Node.js. The library provides specialized patterns like Router, enabling advanced distribution of jobs across multiple queues.
+BullMQ Extra is a set of additional features and extensions for BullMQ, designed to enhance message queue handling in Node.js. 
+The library provides specialized patterns like Routing and Joining, which are currently not available in the core BullMQ library.
 
 ## Installation:
 
@@ -61,13 +62,56 @@ router2.run().then().catch();
 
 - **optsOverride:** A function that takes the job data and returns an object with options to override the default options for the job.
 
+## Join:
+Join allows you to combine jobs from multiple queues into a single queue.
+
+### Basic Usage:
+
+```typescript
+import { Queue, Worker } from 'bullmq';
+import { Join } from 'bullmq-extra';
+
+const join = new Join({
+  joinName: 'join1',
+  onComplete: (data) => {
+    const sum = data.reduce((acc, val) => {
+      return acc + val.value;
+    }, 0);
+    return { sum };
+  },
+  redis: new IORedis(),
+  sources: [
+    {
+      queue: 'source1',
+      getJoinKey: (data) => data.joinKey, // The key to join the data on. This is a simplistic example but you can use any logic on the job data to generate the key.
+    },
+    {
+      queue: 'source2',
+      getJoinKey: (data) => data.joinKey,
+    },
+  ],
+  target: new Queue('target1'),
+  timeout: 1000,
+});
+join.run();
+
+// Add jobs to the source queues
+sourceQueue1.add('job', { joinKey: 'key1', value: 1 });
+sourceQueue2.add('job', { joinKey: 'key1', value: 2 });
+
+// The onComplete function will be called with the combined data
+targetQueue1.on('completed', (job) => {
+  console.log(job.data); // { sum: 3 }
+});
+
+```
+
 ### Caution:
  - Beware of circular dependencies when using routers. This can lead to infinite loops which will overload your Redis.
  - The package is new so breaking changes are to be expected until version 1.0.0.
 
 ## Roadmap:
- - **Joins:** Create joins between queues and output the result to a new queue.
- - **Aggregations:** Accumulate messages from a queue and output aggregations to a new queue.
+ - **Accumulations:** Accumulate messages from a queue and output aggregations to a new queue.
  - **Request-Reply:** Implement request-reply patterns with BullMQ.
  - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate package or several.
 

@@ -1,7 +1,7 @@
 # BullMQ Extra
 
 BullMQ Extra is a set of additional features and extensions for BullMQ, designed to enhance message queue handling in Node.js. 
-The library provides specialized patterns like Routing and Joining, which are currently not available in the core BullMQ library.
+The library currently provides specialized patterns like Routing and Joining, with more useful features to come which are currently not available in the core BullMQ library.
 
 ## Installation:
 
@@ -12,7 +12,7 @@ npm install bullmq-extra
 # Features
 
 ## Router: 
-Routers allow you to distribute jobs from one or more source queues to one or more target queues. This is useful for implementing:
+`Routers` allow you to distribute jobs from one or more source queues to one or more target queues. This is useful for implementing:
 - fan-out (1->N) patterns, where a single job is processed by multiple workers in parallel.
 - fan-in (N->1) patterns, where multiple job queues are combined and processed by a single worker.
 - fan-in to fan-out (N->N) patterns, where multiple job queues are combined and processed by multiple workers.
@@ -20,6 +20,7 @@ Routers allow you to distribute jobs from one or more source queues to one or mo
 Under the hood the `Router` component leverages `Redis Streams` so you basically get the same publish-subscribe capability as in Kafka, 
 including retention, consumer groups and message replay,
 but at a fraction of the complexity. And the additional useful patterns mentioned above.
+Also, as everything ends up in a BullMQ queue, you can use all the features of BullMQ like retries, priorities, etc.
 The cost/performance ratio is yet to be benchmarked.
 
 ### Basic Usage:

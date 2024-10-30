@@ -5,7 +5,7 @@ import * as _debug from 'debug';
 
 const debug = _debug('bullmq:join');
 
-export type Source<DataType = any> = {
+export type JoinSource<DataType = any> = {
   queue: string;
   getJoinKey: (data: DataType) => string;
 };
@@ -15,7 +15,7 @@ export class Join<ResultType = any> {
   private joinName: string;
   private timeout?: number;
   private onComplete: (data: { queue: string; val: any }[]) => ResultType;
-  private sources: Source[];
+  private sources: JoinSource[];
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
@@ -25,7 +25,7 @@ export class Join<ResultType = any> {
     joinName: string;
     timeout?: number;
     onComplete: (data: { queue: string; val: any }[]) => ResultType;
-    sources: Source[];
+    sources: JoinSource[];
     target: Queue<ResultType>;
   }) {
     this.joinName = opts.joinName;
@@ -53,7 +53,7 @@ export class Join<ResultType = any> {
           const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinKey(data)}`;
           await this.storeData(source, data);
           await this.limiter.key(limiterKey).schedule(async () => {
-            const result = await this.evaluateJoin(source.getJoinKey(data));
+            const result = await this.evaluate(source.getJoinKey(data));
             if (result) {
               debug('completed', result);
               await this.target.add('completed', result);
@@ -72,7 +72,7 @@ export class Join<ResultType = any> {
         const { joinKey } = data;
         const limiterKey = `bullmq__join:limiter:${this.joinName}:${joinKey}`;
         await this.limiter.key(limiterKey).schedule(async () => {
-          const result = await this.evaluateJoin(joinKey, true);
+          const result = await this.evaluate(joinKey, true);
           if (result) {
             debug('timeout', result);
             await this.target.add('completed', result);
@@ -85,14 +85,14 @@ export class Join<ResultType = any> {
     );
   }
 
-  private async storeData(source: Source, data: any) {
+  private async storeData(source: JoinSource, data: any) {
     const joinKey = source.getJoinKey(data);
     const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));
-    await this.redis.expire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);
+    await this.redis.pexpire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);
   }
 
-  private async evaluateJoin(
+  private async evaluate(
     joinKey: string,
     terminate?: boolean,
   ): Promise<ResultType | void> {
@@ -119,7 +119,7 @@ export class Join<ResultType = any> {
       }));
       const result = this.onComplete(data);
       await this.redis.set(completionKey, '1');
-      await this.redis.expire(
+      await this.redis.pexpire(
         completionKey,
         (this.timeout || 1000 * 60 * 60) * 2,
       );

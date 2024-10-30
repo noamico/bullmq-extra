@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.14.0 - 2024-10-30
+#### Features
+- fixed join tests - (f1372ac) - org
+#### Miscellaneous Chores
+- npm version to 0.13.0 - (6ed0c8a) - GitHub Action
+
+- - -
+
 ## 0.13.0 - 2024-10-30
 #### Features
 - fixed join tests - (b830481) - org

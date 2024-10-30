@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.11.0 - 2024-10-29
+#### Bug Fixes
+- merged - (7717814) - org
+#### Features
+- implemented join class tests - (efc049d) - org
+- implemented join class - (c4499ce) - org
+- implemented join class - (1974cb2) - org
+#### Miscellaneous Chores
+- npm version to 0.10.1 - (9a4b2a7) - GitHub Action
+
+- - -
+
 ## 0.10.1 - 2024-10-28
 #### Bug Fixes
 - readme refinements - (ec4be27) - org

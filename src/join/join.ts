@@ -5,7 +5,7 @@ import * as _debug from 'debug';
 
 const debug = _debug('bullmq:join');
 
-export type Source<DataType = any> = {
+export type JoinSource<DataType = any> = {
   queue: string;
   getJoinKey: (data: DataType) => string;
 };
@@ -15,7 +15,7 @@ export class Join<ResultType = any> {
   private joinName: string;
   private timeout?: number;
   private onComplete: (data: { queue: string; val: any }[]) => ResultType;
-  private sources: Source[];
+  private sources: JoinSource[];
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
@@ -25,7 +25,7 @@ export class Join<ResultType = any> {
     joinName: string;
     timeout?: number;
     onComplete: (data: { queue: string; val: any }[]) => ResultType;
-    sources: Source[];
+    sources: JoinSource[];
     target: Queue<ResultType>;
   }) {
     this.joinName = opts.joinName;
@@ -85,7 +85,7 @@ export class Join<ResultType = any> {
     );
   }
 
-  private async storeData(source: Source, data: any) {
+  private async storeData(source: JoinSource, data: any) {
     const joinKey = source.getJoinKey(data);
     const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));

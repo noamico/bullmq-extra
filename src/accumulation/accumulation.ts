@@ -5,7 +5,7 @@ import * as _debug from 'debug';
 
 const debug = _debug('bullmq:accumulation');
 
-export type Source<DataType = any> = {
+export type AccumulationSource<DataType = any> = {
   queue: string;
   getGroupKey: (data: DataType) => string;
 };
@@ -16,7 +16,7 @@ export class Accumulation<DataType = any, ResultType = any> {
   private timeout?: number;
   private expectedItems?: number;
   private onComplete: (data: DataType[]) => ResultType;
-  private source: Source;
+  private source: AccumulationSource;
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
@@ -28,7 +28,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       timeout?: number;
       expectedItems?: number;
       onComplete: (data: DataType[]) => ResultType;
-      source: Source;
+      source: AccumulationSource;
       target: Queue<ResultType>;
     },
   ) {

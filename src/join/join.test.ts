@@ -122,7 +122,7 @@ describe('join', function () {
           getJoinKey: source.getJoinKey,
         })),
         target,
-        timeout: 10,
+        timeout: 100,
       });
       join.run();
 

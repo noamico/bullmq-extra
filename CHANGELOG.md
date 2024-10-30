@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.13.0 - 2024-10-30
+#### Features
+- fixed join tests - (b830481) - org
+- accumulations - (4f26ec0) - org
+- accumulations - (f142201) - org
+- accumulation wip... - (d1756e9) - org
+#### Miscellaneous Chores
+- npm version to 0.12.0 - (5c58441) - GitHub Action
+
+- - -
+
 ## 0.12.0 - 2024-10-30
 #### Features
 - single connection everywhere - (3ac1f3b) - org

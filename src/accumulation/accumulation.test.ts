@@ -6,8 +6,8 @@ import { Accumulation } from './accumulation';
 
 jest.setTimeout(60000);
 
-describe('join', function () {
-  let generalConnection: IORedis;
+describe('accumulation', function () {
+  let connection: IORedis;
   beforeAll(async function () {
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
       .withExposedPorts(6379)
@@ -16,7 +16,7 @@ describe('join', function () {
       );
     const redisContainer = await redisContainerSetup.start();
     const mappedPort = redisContainer.getMappedPort(6379);
-    generalConnection = new IORedis({
+    connection = new IORedis({
       port: mappedPort,
       maxRetriesPerRequest: null,
     });
@@ -24,188 +24,97 @@ describe('join', function () {
 
   describe('when completing within timeout', () => {
     it('should send complete result', async () => {
-      const joinName = `test-${v4()}`;
+      const accumulationName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
-        connection: generalConnection,
+        connection,
       });
-      const sources = [
-        {
-          queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
-          }),
-          getJoinKey: (data) => data.joinKey,
-        },
-        {
-          queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
-          }),
-          getJoinKey: (data) => data.joinKey,
-        },
-      ];
+      const source = {
+        queue: new Queue(`test-${v4()}`, {
+          connection,
+        }),
+        getGroupKey: (data) => data.accumulationKey,
+      };
 
-      const join = new Accumulation({
-        joinName,
+      const accumulation = new Accumulation({
+        accumulationName,
         onComplete: (data) => {
           const sum = data.reduce((acc, val) => {
-            return acc + val.val.value;
+            return acc + val.value;
           }, 0);
           return { sum };
         },
-        redis: generalConnection,
-        sources: sources.map((source) => ({
+        opts: { connection },
+        source: {
           queue: source.queue.name,
-          getJoinKey: source.getJoinKey,
-        })),
+          getGroupKey: source.getGroupKey,
+        },
         target,
         timeout: 10000,
+        expectedItems: 10,
       });
-      join.run();
+      accumulation.run();
 
       const jobs = 10;
 
       for (let i = 1; i <= jobs; i++) {
-        for (const source of sources) {
-          await source.queue.add('test', { joinKey: i, value: i });
-        }
+        await source.queue.add('test', { accumulationKey: 1, value: i });
       }
 
-      while ((await target.count()) < jobs) {
+      while ((await target.count()) < 1) {
         await delay(50);
       }
 
-      expect(await target.count()).toEqual(jobs);
-      const waiting = await target.getWaiting();
-      expect(
-        waiting.map((job) => job.data).sort((a, b) => a.sum - b.sum),
-      ).toEqual(
-        Array.from(Array(jobs).keys())
-          .map((i) => ({
-            sum: (i + 1) * 2,
-          }))
-          .sort((a, b) => a.sum - b.sum),
-      );
+      expect(await target.count()).toEqual(1);
+      const waiting = (await target.getWaiting())[0];
+      expect(waiting.data).toEqual({ sum: 55 });
     });
   });
 
   describe('when not completing within timeout', () => {
     it('should send partial result', async () => {
-      const joinName = `test-${v4()}`;
+      const accumulationName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
-        connection: generalConnection,
+        connection,
       });
-      const sources = [
-        {
-          queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
-          }),
-          getJoinKey: (data) => data.joinKey,
-        },
-        {
-          queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
-          }),
-          getJoinKey: (data) => data.joinKey,
-        },
-      ];
+      const source = {
+        queue: new Queue(`test-${v4()}`, {
+          connection,
+        }),
+        getGroupKey: (data) => data.accumulationKey,
+      };
 
-      const join = new Accumulation({
-        joinName,
+      const accumulation = new Accumulation({
+        accumulationName,
         onComplete: (data) => {
           const sum = data.reduce((acc, val) => {
-            return acc + val.val.value;
+            return acc + val.value;
           }, 0);
           return { sum };
         },
-        redis: generalConnection,
-        sources: sources.map((source) => ({
+        opts: { connection },
+        source: {
           queue: source.queue.name,
-          getJoinKey: source.getJoinKey,
-        })),
+          getGroupKey: source.getGroupKey,
+        },
         target,
-        timeout: 10,
+        timeout: 100,
+        expectedItems: 10,
       });
-      join.run();
+      accumulation.run();
 
       const jobs = 10;
 
-      for (let i = 1; i <= jobs; i++) {
-        await sources[0].queue.add('test', { joinKey: i, value: i });
+      for (let i = 1; i <= jobs - 1; i++) {
+        await source.queue.add('test', { accumulationKey: 1, value: i });
       }
 
-      while ((await target.count()) < jobs) {
+      while ((await target.count()) < 1) {
         await delay(50);
       }
 
-      expect(await target.count()).toEqual(jobs);
-      const waiting = await target.getWaiting();
-      expect(
-        waiting.map((job) => job.data).sort((a, b) => a.sum - b.sum),
-      ).toEqual(
-        Array.from(Array(jobs).keys())
-          .map((i) => ({
-            sum: i + 1,
-          }))
-          .sort((a, b) => a.sum - b.sum),
-      );
-    });
-  });
-
-  describe('when only 1 source', () => {
-    it('should send complete result', async () => {
-      const joinName = `test-${v4()}`;
-      const target = new Queue(`test-${v4()}`, {
-        connection: generalConnection,
-      });
-      const sources = [
-        {
-          queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
-          }),
-          getJoinKey: (data) => data.joinKey,
-        },
-      ];
-
-      const join = new Accumulation({
-        joinName,
-        onComplete: (data) => {
-          const sum = data.reduce((acc, val) => {
-            return acc + val.val.value;
-          }, 0);
-          return { sum };
-        },
-        redis: generalConnection,
-        sources: sources.map((source) => ({
-          queue: source.queue.name,
-          getJoinKey: source.getJoinKey,
-        })),
-        target,
-        timeout: 10000,
-      });
-      join.run();
-
-      const jobs = 10;
-
-      for (let i = 1; i <= jobs; i++) {
-        for (const source of sources) {
-          await source.queue.add('test', { joinKey: i, value: i });
-        }
-      }
-
-      while ((await target.count()) < jobs) {
-        await delay(50);
-      }
-
-      expect(await target.count()).toEqual(jobs);
-      const waiting = await target.getWaiting();
-      expect(
-        waiting.map((job) => job.data).sort((a, b) => a.sum - b.sum),
-      ).toEqual(
-        Array.from(Array(jobs).keys())
-          .map((i) => ({
-            sum: i + 1,
-          }))
-          .sort((a, b) => a.sum - b.sum),
-      );
+      expect(await target.count()).toEqual(1);
+      const waiting = (await target.getWaiting())[0];
+      expect(waiting.data).toEqual({ sum: 45 });
     });
   });
 });

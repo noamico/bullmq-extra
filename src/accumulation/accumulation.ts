@@ -1,6 +1,6 @@
-import { Queue, Worker } from 'bullmq';
-import { Redis } from 'ioredis';
+import { ConnectionOptions, Queue, Worker } from 'bullmq';
 import BottleNeck from 'bottleneck';
+import * as IORedis from 'ioredis';
 import * as _debug from 'debug';
 
 const debug = _debug('bullmq:accumulation');
@@ -10,33 +10,39 @@ export type Source<DataType = any> = {
   getGroupKey: (data: DataType) => string;
 };
 
-export class Accumulation<ResultType = any> {
+export class Accumulation<DataType = any, ResultType = any> {
   private timeoutQueue: Queue;
-  private redis: Redis;
-  private groupName: string;
+  private accumulationName: string;
   private timeout?: number;
-  private onComplete: (data: { queue: string; val: any }[]) => ResultType;
-  private sources: Source[];
+  private expectedItems?: number;
+  private onComplete: (data: DataType[]) => ResultType;
+  private source: Source;
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
+  private redis: IORedis.Redis | IORedis.Cluster;
 
-  constructor(opts: {
-    redis: Redis;
-    groupName: string;
-    timeout?: number;
-    onComplete: (data: { queue: string; val: any }[]) => ResultType;
-    sources: Source[];
-    target: Queue<ResultType>;
-  }) {
-    this.redis = opts.redis;
-    this.groupName = opts.groupName;
+  constructor(
+    private opts: {
+      opts: { connection: ConnectionOptions };
+      accumulationName: string;
+      timeout?: number;
+      expectedItems?: number;
+      onComplete: (data: DataType[]) => ResultType;
+      source: Source;
+      target: Queue<ResultType>;
+    },
+  ) {
+    this.accumulationName = opts.accumulationName;
     this.timeout = opts.timeout;
+    this.expectedItems = opts.expectedItems || 0;
     this.onComplete = opts.onComplete;
-    this.sources = opts.sources;
+    this.source = opts.source;
     this.target = opts.target;
-    this.timeoutQueue = new Queue(`bullmq__group__timeout__${this.groupName}`, {
-      connection: this.redis,
-    });
+    this.timeoutQueue = new Queue(
+      `bullmq__accumulation__timeout__${this.accumulationName}`,
+      opts.opts,
+    );
+    this.redis = this.getIORedisInstance(opts.opts.connection);
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
       Redis: this.redis,
@@ -44,36 +50,16 @@ export class Accumulation<ResultType = any> {
   }
 
   public run() {
-    for (const source of this.sources) {
-      new Worker(
-        source.queue,
-        async (job) => {
-          const data = job.data;
-          const limiterKey = `bullmq__group:limiter:${this.groupName}:${source.getGroupKey(data)}`;
-          await this.storeData(source, data);
-          await this.limiter.key(limiterKey).schedule(async () => {
-            const result = await this.evaluateJoin(source.getGroupKey(data));
-            if (result) {
-              debug('completed', result);
-              await this.target.add('completed', result);
-            }
-          });
-        },
-        {
-          connection: this.redis,
-        },
-      );
-    }
     new Worker(
-      this.timeoutQueue.name,
+      this.source.queue,
       async (job) => {
         const data = job.data;
-        const { groupKey } = data;
-        const limiterKey = `bullmq__group:limiter:${this.groupName}:${groupKey}`;
+        const limiterKey = `bullmq__accumulation:limiter:${this.accumulationName}:${this.source.getGroupKey(data)}`;
+        await this.storeData(data);
         await this.limiter.key(limiterKey).schedule(async () => {
-          const result = await this.evaluateJoin(groupKey, true);
+          const result = await this.evaluate(this.source.getGroupKey(data));
           if (result) {
-            debug('timeout', result);
+            debug('completed', result);
             await this.target.add('completed', result);
           }
         });
@@ -82,55 +68,87 @@ export class Accumulation<ResultType = any> {
         connection: this.redis,
       },
     );
+    new Worker(
+      this.timeoutQueue.name,
+      async (job) => {
+        const data = job.data;
+        const { groupKey } = data;
+        const limiterKey = `bullmq__accumulation:limiter:${this.accumulationName}:${groupKey}`;
+        await this.limiter.key(limiterKey).schedule(async () => {
+          const result = await this.evaluate(groupKey, true);
+          if (result) {
+            debug('timeout', result);
+            await this.target.add('completed', result);
+          }
+        });
+      },
+      {
+        connection: this.opts.opts.connection,
+      },
+    );
   }
 
-  private async storeData(source: Source, data: any) {
-    const groupKey = source.getGroupKey(data);
-    const storeKey = `bullmq__group:value:${this.groupName}:${groupKey}:${source.queue}`;
-    await this.redis.set(storeKey, JSON.stringify(data));
-    await this.redis.expire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);
+  private async storeData(data: any) {
+    const groupKey = this.source.getGroupKey(data);
+    const storeKey = `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`;
+    await this.redis.lpush(storeKey, JSON.stringify(data));
+    await this.redis.pexpire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);
   }
 
-  private async evaluateJoin(
+  private async evaluate(
     groupKey: string,
     terminate?: boolean,
   ): Promise<ResultType | void> {
-    const completionKey = `bullmq__group:isComplete:${this.groupName}:${groupKey}`;
+    const completionKey = `bullmq__accumulation:isComplete:${this.accumulationName}:${groupKey}`;
     const isComplete = await this.redis.exists(completionKey);
     if (isComplete) {
       return;
     }
-    const allStored = (
-      await Promise.all(
-        this.sources.map(async (source) => {
-          const val = await this.redis.get(
-            `bullmq__group:value:${this.groupName}:${groupKey}:${source.queue}`,
-          );
-          return { queue: source.queue, val };
-        }),
-      )
-    ).filter((stored) => stored.val);
+    const storedLen = await this.redis.llen(
+      `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
+    );
 
-    if (allStored.length === this.sources.length || terminate) {
-      const data = allStored.map((stored) => ({
-        queue: stored.queue,
-        val: JSON.parse(stored.val),
-      }));
+    if (
+      (this.expectedItems > 0 && storedLen >= this.expectedItems) ||
+      terminate
+    ) {
+      const data = (
+        await this.redis.lrange(
+          `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
+          0,
+          -1,
+        )
+      ).map((stored) => JSON.parse(stored));
       const result = this.onComplete(data);
       await this.redis.set(completionKey, '1');
-      await this.redis.expire(
+      await this.redis.pexpire(
         completionKey,
         (this.timeout || 1000 * 60 * 60) * 2,
       );
       return result;
     }
 
-    if (allStored.length === 1) {
+    if (storedLen === 1) {
       await this.timeoutQueue.add(
         'timeout',
         { groupKey },
         { delay: this.timeout || 1000 * 60 * 60 },
       );
+    }
+  }
+
+  private getIORedisInstance(
+    connection: ConnectionOptions,
+  ): IORedis.Redis | IORedis.Cluster {
+    if (
+      connection instanceof IORedis.Redis ||
+      connection instanceof IORedis.Cluster
+    ) {
+      return connection;
+    } else if (Array.isArray(connection)) {
+      return new IORedis.Cluster(connection);
+    } else {
+      return new IORedis.Redis(connection);
     }
   }
 }

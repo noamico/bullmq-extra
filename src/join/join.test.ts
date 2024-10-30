@@ -7,7 +7,7 @@ import { Join } from './join';
 jest.setTimeout(60000);
 
 describe('join', function () {
-  let generalConnection: IORedis;
+  let connection: IORedis;
   beforeAll(async function () {
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
       .withExposedPorts(6379)
@@ -16,7 +16,7 @@ describe('join', function () {
       );
     const redisContainer = await redisContainerSetup.start();
     const mappedPort = redisContainer.getMappedPort(6379);
-    generalConnection = new IORedis({
+    connection = new IORedis({
       port: mappedPort,
       maxRetriesPerRequest: null,
     });
@@ -26,18 +26,18 @@ describe('join', function () {
     it('should send complete result', async () => {
       const joinName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
-        connection: generalConnection,
+        connection,
       });
       const sources = [
         {
           queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
+            connection,
           }),
           getJoinKey: (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
+            connection,
           }),
           getJoinKey: (data) => data.joinKey,
         },
@@ -51,7 +51,7 @@ describe('join', function () {
           }, 0);
           return { sum };
         },
-        redis: generalConnection,
+        opts: { connection },
         sources: sources.map((source) => ({
           queue: source.queue.name,
           getJoinKey: source.getJoinKey,
@@ -91,18 +91,18 @@ describe('join', function () {
     it('should send partial result', async () => {
       const joinName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
-        connection: generalConnection,
+        connection,
       });
       const sources = [
         {
           queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
+            connection,
           }),
           getJoinKey: (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
+            connection,
           }),
           getJoinKey: (data) => data.joinKey,
         },
@@ -116,7 +116,7 @@ describe('join', function () {
           }, 0);
           return { sum };
         },
-        redis: generalConnection,
+        opts: { connection },
         sources: sources.map((source) => ({
           queue: source.queue.name,
           getJoinKey: source.getJoinKey,
@@ -154,12 +154,12 @@ describe('join', function () {
     it('should send complete result', async () => {
       const joinName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
-        connection: generalConnection,
+        connection,
       });
       const sources = [
         {
           queue: new Queue(`test-${v4()}`, {
-            connection: generalConnection,
+            connection,
           }),
           getJoinKey: (data) => data.joinKey,
         },
@@ -173,7 +173,7 @@ describe('join', function () {
           }, 0);
           return { sum };
         },
-        redis: generalConnection,
+        opts: { connection },
         sources: sources.map((source) => ({
           queue: source.queue.name,
           getJoinKey: source.getJoinKey,

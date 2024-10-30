@@ -9,8 +9,7 @@ import { Router } from './router';
 jest.setTimeout(60000);
 
 describe('router', function () {
-  let consumerConnection: IORedis;
-  let generalConnection: IORedis;
+  let connection: IORedis;
   beforeAll(async function () {
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
       .withExposedPorts(6379)
@@ -19,11 +18,7 @@ describe('router', function () {
       );
     const redisContainer = await redisContainerSetup.start();
     const mappedPort = redisContainer.getMappedPort(6379);
-    consumerConnection = new IORedis({
-      port: mappedPort,
-      maxRetriesPerRequest: null,
-    });
-    generalConnection = new IORedis({
+    connection = new IORedis({
       port: mappedPort,
       maxRetriesPerRequest: null,
     });
@@ -35,10 +30,10 @@ describe('router', function () {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
         const producer = new Producer(streamName, {
-          connection: generalConnection,
+          connection,
         });
         const consumer = new Consumer(streamName, {
-          connection: consumerConnection,
+          connection,
           maxRetentionMs: 100,
           trimIntervalMs: 100,
         });
@@ -64,10 +59,10 @@ describe('router', function () {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
         const producer = new Producer(streamName, {
-          connection: generalConnection,
+          connection,
         });
         const consumer = new Consumer(streamName, {
-          connection: consumerConnection,
+          connection,
           batchSize: 10,
         });
         const jobs = 10;
@@ -95,10 +90,10 @@ describe('router', function () {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
         const producer = new Producer(streamName, {
-          connection: generalConnection,
+          connection,
         });
         const consumer = new Consumer(streamName, {
-          connection: consumerConnection,
+          connection,
         });
         const jobs = 10;
         const processed: any[] = [];
@@ -125,10 +120,10 @@ describe('router', function () {
         const streamName = `test-${v4()}`;
         const consumerGroup = `test-${v4()}`;
         const producer = new Producer(streamName, {
-          connection: generalConnection,
+          connection,
         });
         const consumer = new Consumer(streamName, {
-          connection: consumerConnection,
+          connection,
         });
         const jobs = 10;
         const processed: any[] = [];
@@ -160,16 +155,17 @@ describe('router', function () {
         it('should route to defined queues', async () => {
           const sourceQueueName = `test-${v4()}`;
           const sourceQueue = new Queue(sourceQueueName, {
-            connection: generalConnection,
+            connection,
           });
           const targetQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
-          const router = new Router()
-            .addSources(sourceQueueName)
-            .addTargets(...targetQueues)
-            .setOptions({ connection: consumerConnection });
+          const router = new Router({
+            sources: [sourceQueueName],
+            targets: targetQueues,
+            opts: { connection },
+          });
           const jobs = 10;
 
           router.run().then();
@@ -197,17 +193,17 @@ describe('router', function () {
         it('should set options on target jobs', async () => {
           const sourceQueueName = `test-${v4()}`;
           const sourceQueue = new Queue(sourceQueueName, {
-            connection: generalConnection,
+            connection,
           });
           const targetQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
-          const router = new Router()
-            .addSources(sourceQueueName)
-            .addTargets(...targetQueues)
-            .setOptions({ connection: consumerConnection });
-
+          const router = new Router({
+            sources: [sourceQueueName],
+            targets: targetQueues,
+            opts: { connection },
+          });
           const jobs = 10;
 
           router.run().then();
@@ -241,19 +237,20 @@ describe('router', function () {
         it('should override options on target jobs', async () => {
           const sourceQueueName = `test-${v4()}`;
           const sourceQueue = new Queue(sourceQueueName, {
-            connection: generalConnection,
+            connection,
           });
           const targetQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
-          const router = new Router()
-            .addSources(sourceQueueName)
-            .addTargets(...targetQueues)
-            .setOptions({
-              connection: consumerConnection,
+          const router = new Router({
+            sources: [sourceQueueName],
+            targets: targetQueues,
+            opts: {
+              connection,
               optsOverride: (data) => ({ jobId: `test-${data.idx + 10}` }),
-            });
+            },
+          });
 
           const jobs = 10;
 
@@ -286,16 +283,17 @@ describe('router', function () {
         it('should route to defined queues', async () => {
           const sourceQueueName = `test-${v4()}`;
           const sourceQueue = new Queue(sourceQueueName, {
-            connection: generalConnection,
+            connection,
           });
           const targetQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
-          const router = new Router()
-            .addSources(sourceQueueName)
-            .addTargets(...targetQueues)
-            .setOptions({ connection: consumerConnection });
+          const router = new Router({
+            sources: [sourceQueueName],
+            targets: targetQueues,
+            opts: { connection },
+          });
 
           const jobs = 10;
 
@@ -329,20 +327,22 @@ describe('router', function () {
         it('should not consume acked messages', async () => {
           const sourceQueueName = `test-${v4()}`;
           const sourceQueue = new Queue(sourceQueueName, {
-            connection: generalConnection,
+            connection,
           });
           const targetQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
-          const router = new Router()
-            .addSources(sourceQueueName)
-            .addTargets(...targetQueues)
-            .setOptions({ connection: consumerConnection });
-          const laterRouter = new Router()
-            .addSources(sourceQueueName)
-            .addTargets(...targetQueues)
-            .setOptions({ connection: consumerConnection });
+          const router = new Router({
+            sources: [sourceQueueName],
+            targets: targetQueues,
+            opts: { connection },
+          });
+          const laterRouter = new Router({
+            sources: [sourceQueueName],
+            targets: targetQueues,
+            opts: { connection },
+          });
           const jobs = 10;
 
           router.run().then().catch(console.error);
@@ -391,17 +391,18 @@ describe('router', function () {
       describe('when jobs produced with an active router', () => {
         it('should route to defined queues', async () => {
           const sourceQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
           const targetQueueName = `test-${v4()}`;
           const targetQueue = new Queue(targetQueueName, {
-            connection: generalConnection,
+            connection,
           });
-          const router = new Router()
-            .addSources(...sourceQueues.map((q) => q.name))
-            .addTargets(targetQueue)
-            .setOptions({ connection: consumerConnection });
+          const router = new Router({
+            sources: sourceQueues.map((q) => q.name),
+            targets: [targetQueue],
+            opts: { connection },
+          });
           const jobs = 10;
 
           router.run().then().catch(console.error);
@@ -434,17 +435,18 @@ describe('router', function () {
       describe('when jobs produced with an active router', () => {
         it('should route to defined queues', async () => {
           const sourceQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
           const targetQueues = [
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
-            new Queue(`test-${v4()}`, { connection: generalConnection }),
+            new Queue(`test-${v4()}`, { connection }),
+            new Queue(`test-${v4()}`, { connection }),
           ];
-          const router = new Router()
-            .addSources(...sourceQueues.map((q) => q.name))
-            .addTargets(...targetQueues)
-            .setOptions({ connection: consumerConnection });
+          const router = new Router({
+            sources: sourceQueues.map((q) => q.name),
+            targets: targetQueues,
+            opts: { connection },
+          });
           const jobs = 10;
 
           router.run().then().catch(console.error);

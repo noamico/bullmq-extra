@@ -11,23 +11,18 @@ export class Router<DataType = any> {
   private workers: QueueToStreamWorker[] = [];
   private closed: Promise<void>;
   private closedCount: number = 0;
-  private sourceQueues: string[] = [];
-  private targetQueues: Queue<DataType>[] = [];
-  private opts?: RouterOptions = { connection: null };
+  private sourceQueues: string[];
+  private targetQueues: Queue<DataType>[];
+  private opts?: RouterOptions;
 
-  addSources(...queueNames: string[]): Router {
-    this.sourceQueues.push(...queueNames);
-    return this;
-  }
-
-  addTargets(...queues: Queue<DataType>[]): Router {
-    this.targetQueues.push(...queues);
-    return this;
-  }
-
-  setOptions(opts: RouterOptions): Router {
-    this.opts = opts;
-    return this;
+  constructor(opts: {
+    sources: string[];
+    targets: Queue<DataType>[];
+    opts?: RouterOptions;
+  }) {
+    this.sourceQueues = opts.sources;
+    this.targetQueues = opts.targets;
+    this.opts = opts.opts || { connection: null };
   }
 
   async run(): Promise<void> {

@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.12.0 - 2024-10-30
+#### Features
+- single connection everywhere - (3ac1f3b) - org
+#### Miscellaneous Chores
+- npm version to 0.11.4 - (10cd634) - GitHub Action
+
+- - -
+
 ## 0.11.4 - 2024-10-30
 #### Bug Fixes
 - join docs in readme - (96efeb4) - org

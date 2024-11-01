@@ -1,7 +1,4 @@
 import { ConnectionOptions, Queue, Worker } from 'bullmq';
-import * as _debug from 'debug';
-
-const debug = _debug('bullmq:reqrep:responder');
 
 export class Responder<RequestType = any, ResponseType = any> {
   private responderName: string;

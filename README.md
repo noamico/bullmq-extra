@@ -10,9 +10,13 @@ npm install bullmq-extra
 ```
 
 # Features
+- [Router](#router)
+- [Join](#join)
+- [Accumulation](#accumulation)
+- [Request-Response](#request-response)
 
-## Router: 
-`Router` allow you to distribute jobs from one or more source queues to one or more target queues. This is useful for implementing:
+## Router:
+`Routers` allow you to distribute jobs from one or more source queues to one or more target queues. This is useful for implementing:
 - fan-out (1->N) patterns, where a single job is processed by multiple workers in parallel.
 - fan-in (N->1) patterns, where multiple job queues are combined and processed by a single worker.
 - fan-in to fan-out (N->N) patterns, where multiple job queues are combined and processed by multiple workers.
@@ -49,6 +53,12 @@ const router2 = new Router()
   .addSources('source1')
   .addTargets(targetQueue3,targetQueue4);
 router2.run().then().catch();
+
+// Add jobs to the source queues
+sourceQueue1.add('job', { data: 'data1' });
+sourceQueue2.add('job', { data: 'data2' });
+
+// The jobs will be delivered to all the target queues
 ```
 
 ### Advanced Options (`RouterOptions`):
@@ -67,7 +77,7 @@ router2.run().then().catch();
 - Beware of circular dependencies when using routers. This can lead to infinite loops which will overload your Redis.
 
 ## Join:
-`Join` allows you to combine jobs from multiple queues into a single queue while joining them on a common key. 
+`Joins` allows you to combine jobs from multiple queues into a single queue while joining them on a common key. 
 This is a common pattern in ETL and data processing pipelines and is now available for BullMQ users as well.
 
 ### Basic Usage:
@@ -104,14 +114,11 @@ join.run();
 sourceQueue1.add('job', { joinKey: 'key1', value: 1 });
 sourceQueue2.add('job', { joinKey: 'key1', value: 2 });
 
-// The onComplete function will be called with the combined data
-targetQueue1.on('completed', (job) => {
-  console.log(job.data); // { sum: 3 }
-});
+// The result of the onComplete function will be added to the target queue
 
 ```
 ## Accumulation:
-`Accumulation` allows you to accumulate messages from a queue and output aggregations to a new queue.
+`Accumulations` allow you to accumulate messages from a queue and output aggregations to a new queue.
 
 ### Basic Usage:
 
@@ -142,9 +149,47 @@ accumulation.run();
 sourceQueue1.add('job', { groupKey: 'key1', value: 1 });
 sourceQueue1.add('job', { groupKey: 'key1', value: 2 });
 
-// The onComplete function will be called with the accumulated data
-targetQueue1.on('completed', (job) => {
-  console.log(job.data); // { sum: 3 }
+// The result of the onComplete function will be added to the target queue
+```
+
+## Request-Response:
+`Requesters` and `Responders` allow you to create a request-response pattern with BullMQ.
+The `Requester` sends a job to a queue and waits for a response on a dedicated response queue.
+The `Responder` listens for requests on its own queue and sends each response to the appropriate response queue.
+
+### Basic Usage:
+
+```typescript
+import { Requester, Responder } from 'bullmq-extra';
+
+// Somewhere in you application create a responder
+const responder = new Responder({
+  responderName: 'additionJob',
+  opts: { connection },
+});
+responder.processRequests((data: { a: number, b: number }) => {
+  return { result: data.a + data.b };
+});
+
+// Create a requester or several in other places in your application
+const requester1 = new Requester({
+  requesterName: 'additionJob1',
+  responderName: 'additionJob',
+  opts: { connection },
+});
+requester1.request({ a: 1, b: 2 });
+requester1.processResponses((data) => {
+  console.log(data); // {result: 3}
+});
+
+const requester2 = new Requester({
+  requesterName: 'additionJob2',
+  responderName: 'additionJob',
+  opts: { connection },
+});
+requester2.request({ a: 1, b: 5 });
+requester2.processResponses((data) => {
+  console.log(data); // {result: 6}
 });
 ```
 
@@ -152,8 +197,8 @@ targetQueue1.on('completed', (job) => {
  - The package is new so breaking changes are to be expected until version 1.0.0.
 
 ## Roadmap:
- - **Request-Reply:** Implement request-reply patterns with BullMQ.
  - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate package or several.
+ - **BullMQ Broker:** A centralized broker you can run and scale horizontally that wraps around BullMQ and exposes a thin API for producing and consuming. On top of it several thin clients will be available in various languages like Java and Go to bring the power of BullMQ to those languages and allow integrating BullMQ into legacy codebases. In the farther future there is even the possibility of these brokers supporting the Kafka protocol and acting as drop-in Kafka replacements.
 
 ## Contributing:
  - Feel free to open issues for questions, suggestions and feedback. And Issues...

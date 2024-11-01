@@ -19,7 +19,8 @@
     "stream-joins",
     "stream-merges",
     "stream-aggregations",
-    "streams"
+    "streams",
+    "request-response"
   ],
   "author": {
     "name": "Or Gal",

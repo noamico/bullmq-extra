@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.15.1 - 2024-11-02
+#### Bug Fixes
+- readme - (19678d3) - org
+#### Miscellaneous Chores
+- npm version to 0.15.0 - (257bd83) - GitHub Action
+
+- - -
+
 ## 0.15.0 - 2024-11-01
 #### Features
 - reqrep readme - (5d0f7de) - org

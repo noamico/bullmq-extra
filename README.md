@@ -219,7 +219,7 @@ retries, priorities, etc.
 ```typescript
 // Package this code into a docker image and run it as a sidecar to your service
 import { Broker } from 'bullmq-extra';
-const broker = new Broker({ connection });
+const broker = new Broker({ connection: new IORedis() });
 await broker.start(3003);
 
 // When the broker processes messages it will send the data to a POST callback endpoint which your service must provide

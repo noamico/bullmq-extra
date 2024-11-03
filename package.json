@@ -1,6 +1,6 @@
 {
   "name": "bullmq-extra",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "Additional features and extensions for BullMQ.",
   "keywords": [
     "bullmq",

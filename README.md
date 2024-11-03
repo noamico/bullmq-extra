@@ -214,14 +214,6 @@ consuming messages from BullMQ.
 The broker will expose a REST API for producing and consuming messages and will handle all the BullMQ specifics like
 retries, priorities, etc.
 
-### Roadmap:
-
-- Thin clients in various languages like Java and Go will be developed to bring the power of BullMQ to those languages
-  and allow integrating BullMQ into legacy codebases.
-- Support for all `bullmq-extra` patterns like `Router`, `Join`, `Accumulation`, `Request-Response` will be added.
-- Package the broker as a Docker container for easy deployment.
-- Support the Kafka protocol for compatibility with existing Kafka clients.
-
 ### Basic Usage:
 
 ```typescript
@@ -256,6 +248,14 @@ await axios.post('http://localhost:3003/job', {
   opts: {},
 });
 ```
+
+### Roadmap:
+
+- Thin clients in various languages like Java and Go will be developed to bring the power of BullMQ to those languages
+  and allow integrating BullMQ into legacy codebases.
+- Support for all `bullmq-extra` patterns like `Router`, `Join`, `Accumulation`, `Request-Response` will be added.
+- Package the broker as a Docker container for easy deployment.
+- Support the Kafka protocol for compatibility with existing Kafka clients.
 
 ## Caution:
 

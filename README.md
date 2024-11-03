@@ -215,13 +215,17 @@ The broker will expose a REST API for producing and consuming messages and will 
 retries, priorities, etc.
 
 ### Basic Usage:
+The broker is packaged into a docker container and should be run as a sidecar to your service.
+```
+docker pull ghcr.io/orrgal1/bullmq-broker:latest
+```
+
+It accepts the following environment variables:
+- `REDIS_HOST`: The host of the Redis server.
+- `REDIS_PORT`: The port of the Redis server.
+- `BROKER_PORT`: The port on which the broker will listen for requests.
 
 ```typescript
-// Package this code into a docker image and run it as a sidecar to your service
-import { Broker } from 'bullmq-extra';
-const broker = new Broker({ connection: new IORedis() });
-await broker.start(3003);
-
 // When the broker processes messages it will send the data to a POST callback endpoint which your service must provide
 // The following example is in node but the idea is to have this in another language
 
@@ -253,7 +257,6 @@ await axios.post('http://localhost:3003/job', {
 - Thin clients in various languages like Java and Go will be developed to bring the power of BullMQ to those languages
   and allow integrating BullMQ into legacy codebases.
 - Support for all `bullmq-extra` patterns like `Router`, `Join`, `Accumulation`, `Request-Response` will be added.
-- Package the broker as a Docker container for easy deployment.
 - Support the Kafka protocol for compatibility with existing Kafka clients.
 
 ## Caution:

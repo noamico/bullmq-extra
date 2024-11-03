@@ -217,9 +217,8 @@ retries, priorities, etc.
 ### Basic Usage:
 
 ```typescript
+// Package this code into a docker image and run it as a sidecar to your service
 import { Broker } from 'bullmq-extra';
-
-// Somewhere in your application create a Broker
 const broker = new Broker({ connection });
 await broker.start(3003);
 

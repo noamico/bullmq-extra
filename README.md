@@ -1,7 +1,9 @@
 # BullMQ Extra
 
-BullMQ Extra is a set of additional features and extensions for the much beloved [BullMQ](https://www.npmjs.com/package/bullmq). 
-The library currently provides specialized patterns like Routing and Joining, with more useful features to come which are currently not available in the core BullMQ library.
+BullMQ Extra is a set of additional features and extensions for the much
+beloved [BullMQ](https://www.npmjs.com/package/bullmq).
+The library currently provides specialized patterns like Routing and Joining, with more useful features to come which
+are currently not available in the core BullMQ library.
 
 ## Installation:
 
@@ -10,18 +12,24 @@ npm install bullmq-extra
 ```
 
 # Features
+
 - [Router](#router)
 - [Join](#join)
 - [Accumulation](#accumulation)
 - [Request-Response](#request-response)
+- [Broker](#broker)
 
 ## Router:
-`Routers` allow you to distribute jobs from one or more source queues to one or more target queues. This is useful for implementing:
+
+`Routers` allow you to distribute jobs from one or more source queues to one or more target queues. This is useful for
+implementing:
+
 - fan-out (1->N) patterns, where a single job is processed by multiple workers in parallel.
 - fan-in (N->1) patterns, where multiple job queues are combined and processed by a single worker.
 - fan-in to fan-out (N->N) patterns, where multiple job queues are combined and processed by multiple workers.
 
-Under the hood the `Router` component leverages `Redis Streams` so you basically get the same publish-subscribe capability as in Kafka, 
+Under the hood the `Router` component leverages `Redis Streams` so you basically get the same publish-subscribe
+capability as in Kafka,
 including retention, consumer groups and message replay,
 but at a fraction of the complexity. And the additional useful patterns mentioned above.
 Also, as everything ends up in a BullMQ queue, you can use all the features of BullMQ like retries, priorities, etc.
@@ -41,8 +49,8 @@ const sourceQueue2 = new Queue('source2');
 const targetQueue1 = new Queue('target1');
 const targetQueue2 = new Queue('target2');
 const router1 = new Router()
-  .addSources('source1','source2')
-  .addTargets(targetQueue1,targetQueue2);
+  .addSources('source1', 'source2')
+  .addTargets(targetQueue1, targetQueue2);
 
 router1.run().then().catch();
 
@@ -51,7 +59,7 @@ const targetQueue3 = new Queue('target3');
 const targetQueue4 = new Queue('target4');
 const router2 = new Router()
   .addSources('source1')
-  .addTargets(targetQueue3,targetQueue4);
+  .addTargets(targetQueue3, targetQueue4);
 router2.run().then().catch();
 
 // Add jobs to the source queues
@@ -71,13 +79,16 @@ sourceQueue2.add('job', { data: 'data2' });
 
 - **trimIntervalMs:** The interval in which to trim the router stream. Default is 1 minute.
 
-- **optsOverride:** A function that takes the job data and returns an object with options to override the default options for the job.
+- **optsOverride:** A function that takes the job data and returns an object with options to override the default
+  options for the job.
 
 ### Caution:
+
 - Beware of circular dependencies when using routers. This can lead to infinite loops which will overload your Redis.
 
 ## Join:
-`Joins` allows you to combine jobs from multiple queues into a single queue while joining them on a common key. 
+
+`Joins` allows you to combine jobs from multiple queues into a single queue while joining them on a common key.
 This is a common pattern in ETL and data processing pipelines and is now available for BullMQ users as well.
 
 ### Basic Usage:
@@ -117,7 +128,9 @@ sourceQueue2.add('job', { joinKey: 'key1', value: 2 });
 // The result of the onComplete function will be added to the target queue
 
 ```
+
 ## Accumulation:
+
 `Accumulations` allow you to accumulate messages from a queue and output aggregations to a new queue.
 
 ### Basic Usage:
@@ -137,7 +150,7 @@ const accumulation = new Accumulation({
   opts: { connection },
   source: {
     queue: 'source1',
-    getGroupKey: (data) => data.groupKey, 
+    getGroupKey: (data) => data.groupKey,
   },
   target: new Queue('target1'),
   timeout: 1000,
@@ -153,6 +166,7 @@ sourceQueue1.add('job', { groupKey: 'key1', value: 2 });
 ```
 
 ## Request-Response:
+
 `Requesters` and `Responders` allow you to create a request-response pattern with BullMQ.
 The `Requester` sends a job to a queue and waits for a response on a dedicated response queue.
 The `Responder` listens for requests on its own queue and sends each response to the appropriate response queue.
@@ -162,7 +176,7 @@ The `Responder` listens for requests on its own queue and sends each response to
 ```typescript
 import { Requester, Responder } from 'bullmq-extra';
 
-// Somewhere in you application create a responder
+// Somewhere in your application create a responder
 const responder = new Responder({
   responderName: 'additionJob',
   opts: { connection },
@@ -193,15 +207,68 @@ requester2.processResponses((data) => {
 });
 ```
 
+## Broker:
+
+`Brokers` are designed to run as sidecars to processes in non-nodejs languages and provide a thin API for producing and
+consuming messages from BullMQ.
+The broker will expose a REST API for producing and consuming messages and will handle all the BullMQ specifics like
+retries, priorities, etc.
+
+### Roadmap:
+
+- Thin clients in various languages like Java and Go will be developed to bring the power of BullMQ to those languages
+  and allow integrating BullMQ into legacy codebases.
+- Support for all `bullmq-extra` patterns like `Router`, `Join`, `Accumulation`, `Request-Response` will be added.
+- Package the broker as a Docker container for easy deployment.
+- Support the Kafka protocol for compatibility with existing Kafka clients.
+
+### Basic Usage:
+
+```typescript
+import { Broker } from 'bullmq-extra';
+
+// Somewhere in your application create a Broker
+const broker = new Broker({ connection });
+await broker.start(3003);
+
+// When the broker processes messages it will send the data to a POST callback endpoint which your service must provide
+// The following example is in node but the idea is to have this in another language
+
+// Create a Queue called test
+await axios.post('http://localhost:3003/queue', {
+  name: 'test',
+  opts: {},
+});
+
+// Create a Worker for the queue
+await axios.post('http://localhost:3003/worker', {
+  name: 'test',
+  callback: 'http://localhost:3002/job', // The callback endpoint in your own service
+  opts: {},
+});
+
+// Add a job to the queue. The worker will pick up this job and send the data to the callback endpoint.
+// The callback endpoint must return a success status code for the job to be marked as completed.
+// If the callback endpoint returns an error status code the job will be retried or discarded as per the Queue options.
+await axios.post('http://localhost:3003/job', {
+  name: 'test',
+  data: { a: 3, b: 4 },
+  opts: {},
+});
+```
+
 ## Caution:
- - The package is new so breaking changes are to be expected until version 1.0.0.
+
+- The package is new so breaking changes are to be expected until version 1.0.0.
 
 ## Roadmap:
- - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate package or several.
- - **BullMQ Broker Sidecar:** A broker designed to run as a sidecar that wraps around BullMQ and exposes a thin API for producing and consuming. On top of it several thin clients will be available in various languages like Java and Go to bring the power of BullMQ to those languages and allow integrating BullMQ into legacy codebases. In the farther future there is even the possibility of these brokers supporting the Kafka protocol and acting as drop-in Kafka replacements.
+
+- **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate
+  package or several.
 
 ## Contributing:
- - Feel free to open issues for questions, suggestions and feedback. And Issues...
- - To contribute code just fork and open pull requests.
 
- ## Thanks! 🚀
+- Feel free to open issues for questions, suggestions and feedback. And Issues...
+- To contribute code just fork and open pull requests.
+
+## Thanks! 🚀

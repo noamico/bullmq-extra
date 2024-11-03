@@ -220,6 +220,7 @@ retries, priorities, etc.
   and allow integrating BullMQ into legacy codebases.
 - Support for all `bullmq-extra` patterns like `Router`, `Join`, `Accumulation`, `Request-Response` will be added.
 - Package the broker as a Docker container for easy deployment.
+- Support the Kafka protocol for compatibility with existing Kafka clients.
 
 ### Basic Usage:
 
@@ -264,10 +265,6 @@ await axios.post('http://localhost:3003/job', {
 
 - **BullMQ Connect:** Similiar to Kafka Connect, a way to connect BullMQ to other systems. Will probably be a separate
   package or several.
-- **BullMQ Broker Sidecar:** A broker designed to run as a sidecar that wraps around BullMQ and exposes a thin API for
-  producing and consuming. On top of it several thin clients will be available in various languages like Java and Go to
-  bring the power of BullMQ to those languages and allow integrating BullMQ into legacy codebases. In the farther future
-  there is even the possibility of these brokers supporting the Kafka protocol and acting as drop-in Kafka replacements.
 
 ## Contributing:
 

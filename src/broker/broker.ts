@@ -83,7 +83,7 @@ export class Broker {
 
   public async start(port: number) {
     try {
-      await this.server.listen({ port });
+      await this.server.listen({ port, host: '0.0.0.0' });
       debug(`Broker server started on port ${port}`);
     } catch (err) {
       debug('Error starting server:', err);

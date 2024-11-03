@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.16.0 - 2024-11-03
+#### Features
+- broker - (a3a03c3) - org
+- broker - (cc41c49) - org
+- broker - (2515318) - org
+- broker - (14fcf03) - org
+- broker - (df3af59) - org
+#### Miscellaneous Chores
+- npm version to 0.15.1 - (a0d3a7d) - GitHub Action
+
+- - -
+
 ## 0.15.1 - 2024-11-02
 #### Bug Fixes
 - readme - (19678d3) - org

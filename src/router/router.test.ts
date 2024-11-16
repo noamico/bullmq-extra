@@ -1,6 +1,5 @@
 import { v4 } from 'uuid';
-import { default as IORedis } from 'ioredis';
-import { delay, Queue } from 'bullmq';
+import { delay, Queue, RedisOptions } from 'bullmq';
 import { GenericContainer, Wait } from 'testcontainers';
 import { Consumer } from './consumer';
 import { Producer } from './producer';
@@ -9,7 +8,7 @@ import { Router } from './router';
 jest.setTimeout(60000);
 
 describe('router', function () {
-  let connection: IORedis;
+  let connection: RedisOptions;
   beforeAll(async function () {
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
       .withExposedPorts(6379)
@@ -18,10 +17,10 @@ describe('router', function () {
       );
     const redisContainer = await redisContainerSetup.start();
     const mappedPort = redisContainer.getMappedPort(6379);
-    connection = new IORedis({
+    connection = {
       port: mappedPort,
       maxRetriesPerRequest: null,
-    });
+    };
   });
 
   describe('produce-consume', () => {

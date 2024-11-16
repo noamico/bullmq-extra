@@ -134,7 +134,7 @@ export class Broker {
       const router = new Router({
         sources,
         targets: targets.map((t) => new Queue(t.name, t.opts)),
-        ...{ ...opts, connection: this.opts.connection },
+        opts: { ...opts, connection: this.opts.connection },
       });
       router
         .run()

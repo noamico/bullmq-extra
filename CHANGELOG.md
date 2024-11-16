@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.22.2 - 2024-11-16
+#### Bug Fixes
+- sanitize job opts - (db03c8c) - org
+#### Miscellaneous Chores
+- npm version to 0.22.1 - (f01a09e) - GitHub Action
+
+- - -
+
 ## 0.22.1 - 2024-11-16
 #### Bug Fixes
 - passing connection from broker to router - (caea21d) - org

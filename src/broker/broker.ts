@@ -58,7 +58,10 @@ export class Broker {
     this.server.post('/job', async (request: { body: JobBody }, reply) => {
       const { name, data, opts } = request.body;
       const queue = this.getQueue(name);
-      const job = await queue.add(name, data, opts);
+      const sanitizedOpts = Object.fromEntries(
+        Object.entries(opts).filter(([, v]) => v != null),
+      );
+      const job = await queue.add('job', data, sanitizedOpts);
       reply.send({ jobId: job.id });
     });
 
@@ -133,7 +136,10 @@ export class Broker {
       const { sources, targets, opts } = body;
       const router = new Router({
         sources,
-        targets: targets.map((t) => new Queue(t.name, t.opts)),
+        targets: targets.map((t) => {
+          const o = { ...t.opts, connection: this.opts.connection };
+          return new Queue(t.name, o);
+        }),
         opts: { ...opts, connection: this.opts.connection },
       });
       router

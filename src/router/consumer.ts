@@ -1,4 +1,4 @@
-import { JobsOptions, QueueBase, RedisClient, RedisConnection } from 'bullmq';
+import { JobsOptions, QueueBase, RedisClient } from 'bullmq';
 import { RouterOptions } from './router-options';
 import { v4 } from 'uuid';
 import * as _debug from 'debug';
@@ -11,25 +11,17 @@ export class Consumer<DataType = any> extends QueueBase {
   protected consumerOpts: RouterOptions;
   private lastTrim = 0;
 
-  constructor(
-    streamName: string,
-    opts?: RouterOptions,
-    Connection?: typeof RedisConnection,
-  ) {
-    super(
-      streamName,
-      {
-        blockingConnection: false,
-        ...opts,
-      },
-      Connection,
-    );
+  constructor(streamName: string, opts?: RouterOptions) {
+    super(streamName, {
+      blockingConnection: false,
+      ...opts,
+    });
 
     this.consumerOpts = opts || { connection: {} };
 
     this.waitUntilReady()
-      .then(() => {
-        // Nothing to do here atm
+      .then((client) => {
+        debug(`ready on ${client.options['port']}`);
       })
       .catch(() => {
         // We ignore this error to avoid warnings. The error can still

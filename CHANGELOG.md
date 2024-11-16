@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.22.1 - 2024-11-16
+#### Bug Fixes
+- passing connection from broker to router - (caea21d) - org
+- passing connection from broker to router - (5d1cdbf) - org
+#### Miscellaneous Chores
+- npm version to 0.22.0 - (cb8a9c8) - GitHub Action
+
+- - -
+
 ## 0.22.0 - 2024-11-16
 #### Features
 - passing connection from broker to router - (84d63a9) - org

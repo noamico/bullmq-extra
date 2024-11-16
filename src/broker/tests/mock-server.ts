@@ -11,9 +11,7 @@ export class MockServer {
     processor: (a: number, b: number) => Promise<void>,
   ) {
     this.server.post('/job', async (request, reply) => {
-      const {
-        data: { a, b },
-      } = request.body;
+      const { a, b } = request.body;
       await processor(a, b);
       reply.send({ success: true });
     });

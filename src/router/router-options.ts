@@ -1,30 +1,4 @@
-import { ConnectionOptions, JobsOptions, QueueBaseOptions } from 'bullmq';
-
-/**
- * Base Consumer options
- */
-export interface ConsumerBaseOptions {
-  /**
-   * Options for connecting to a Redis instance.
-   */
-  connection: ConnectionOptions;
-
-  /**
-   * Denotes commands should retry indefinitely.
-   */
-  blockingConnection?: boolean;
-
-  /**
-   * Prefix for all queue keys.
-   */
-  prefix?: string;
-
-  /**
-   * Avoid version validation to be greater or equal than v5.0.0.
-   * @defaultValue false
-   */
-  skipVersionCheck?: boolean;
-}
+import { JobsOptions, QueueBaseOptions } from 'bullmq';
 
 /**
  * Options for the Consumer class.

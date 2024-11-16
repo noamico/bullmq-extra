@@ -252,9 +252,16 @@ await axios.post('http://localhost:3003/job', {
 });
 ```
 
+### Thin Clients:
+Thin clients are built to interact with the broker and provide a thin convenient API for utilizing the full power of BullMQ + BullMQ Extra in languages other than NodeJS.
+
+Currently, the following thin clients are available:
+
+### [Java](https://github.com/orrgal1/bullmq-thin-java/packages/2315290)
+
 ### Roadmap:
 
-- Thin clients in various languages like Java and Go will be developed to bring the power of BullMQ to those languages
+- Add more thin clients for various languages like Python and Go to bring the power of BullMQ to those languages
   and allow integrating BullMQ into legacy codebases.
 - Support for all `bullmq-extra` patterns like `Router`, `Join`, `Accumulation`, `Request-Response` will be added.
 - Support the Kafka protocol for compatibility with existing Kafka clients.

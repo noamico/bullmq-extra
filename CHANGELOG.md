@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.22.3 - 2024-11-16
+#### Bug Fixes
+- send only data to callback - (84a40e9) - org
+- send only data to callback - (abbdac2) - org
+#### Miscellaneous Chores
+- npm version to 0.22.2 - (f2725a4) - GitHub Action
+
+- - -
+
 ## 0.22.2 - 2024-11-16
 #### Bug Fixes
 - sanitize job opts - (db03c8c) - org

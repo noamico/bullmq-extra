@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.21.0 - 2024-11-03
+#### Features
+- broker docker - (f92628c) - org
+#### Miscellaneous Chores
+- npm version to 0.20.0 - (f5717ed) - GitHub Action
+
+- - -
+
 ## 0.20.0 - 2024-11-03
 #### Features
 - broker docker - (d2eabe9) - org

@@ -132,9 +132,9 @@ describe('broker', function () {
       ];
 
       const broker = new Broker({ connection });
-      await broker.start(3003);
+      await broker.start(3004);
 
-      await axios.post('http://localhost:3003/router', {
+      await axios.post('http://localhost:3004/router', {
         name: `test-${v4()}`,
         sources: [sourceQueueName],
         targets: targetQueues.map((queue) => ({

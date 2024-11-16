@@ -116,14 +116,16 @@ export class Broker {
       const worker = new Worker(
         name,
         async (job: Job) => {
-          const { data } = job;
-          await axios.post(
-            callback,
-            { name, data },
-            {
+          try {
+            const { data } = job;
+            await axios.post(callback, data, {
               headers: { 'Content-Type': 'application/json' },
-            },
-          );
+            });
+            debug('Job processed:', data);
+          } catch (e) {
+            debug('Error processing job:', e);
+            throw e;
+          }
         },
         { ...opts, connection: this.opts.connection },
       );

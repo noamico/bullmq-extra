@@ -41,7 +41,7 @@
     "prebuild": "npm run lint",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
-    "run-broker": "DEBUG=* REDIS_HOST=localhost REDIS_PORT=62344 BROKER_PORT=5050 ts-node src/broker/run.ts",
+    "run-broker": "DEBUG=* REDIS_HOST=localhost REDIS_PORT=6379 BROKER_PORT=5050 ts-node src/broker/run.ts",
     "deps:upgrade": "npx npm-check-updates -u -x eslint && npm i"
   },
   "dependencies": {

@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.22.0 - 2024-11-16
+#### Features
+- passing connection from broker to router - (84d63a9) - org
+#### Miscellaneous Chores
+- npm version to 0.21.0 - (5fafe50) - GitHub Action
+
+- - -
+
 ## 0.21.0 - 2024-11-03
 #### Features
 - broker docker - (f92628c) - org

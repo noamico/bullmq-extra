@@ -15,9 +15,8 @@ export class Accumulation<DataType = any, ResultType = any> {
   private timeoutQueue: Queue;
   private accumulationName: string;
   private timeout: number;
-  private expectedItems?: number;
   private onComplete: (data: DataType[]) => ResultType;
-  private isComplete?: (data: DataType[]) => boolean;
+  private isComplete?: (data: DataType[]) => Promise<boolean>;
   private source: AccumulationSource;
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
@@ -28,7 +27,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       opts: { connection: ConnectionOptions };
       accumulationName: string;
       timeout?: number;
-      isComplete?: (data: DataType[]) => boolean;
+      isComplete?: (data: DataType[]) => Promise<boolean>;
       onComplete: (data: DataType[]) => ResultType;
       source: AccumulationSource;
       target: Queue<ResultType>;
@@ -102,29 +101,31 @@ export class Accumulation<DataType = any, ResultType = any> {
     terminate?: boolean,
   ): Promise<ResultType | void> {
     const completionKey = `bullmq__accumulation:isComplete:${this.accumulationName}:${groupKey}`;
-    const isComplete = await this.redis.exists(completionKey);
-    if (isComplete) {
+    const keyCompleted = await this.redis.exists(completionKey);
+    if (keyCompleted) {
       return;
     }
     const storedLen = await this.redis.llen(
       `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
     );
 
-    if (terminate) {
-      const data = (
-        await this.redis.lrange(
-          `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
-          0,
-          -1,
-        )
-      ).map((stored) => JSON.parse(stored));
+    const data = (
+      await this.redis.lrange(
+        `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
+        0,
+        -1,
+      )
+    ).map((stored) => JSON.parse(stored));
+
+    if (terminate || (this.isComplete && (await this.isComplete(data)))) {
       const result = this.onComplete(data);
       await this.redis.set(completionKey, '1');
-      await this.redis.pexpire(completionKey, this.timeout * 2);
+      await this.redis.pexpire(completionKey, this.timeout * 2); // TODO: dangerous, what if we start with the key a fresh new start in the meantime?
       return result;
     }
 
     if (storedLen === 1) {
+      // TODO: maybe also delete the isComplete key for it if exist?
       await this.timeoutQueue.add(
         'timeout',
         { groupKey },

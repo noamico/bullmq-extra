@@ -165,6 +165,8 @@ sourceQueue1.add('job', { groupKey: 'key1', value: 2 });
 // The result of the onComplete function will be added to the target queue
 ```
 
+*IMPORTANT NOTE: make sure not to re-use keys among different runs, even on the same data!
+
 ## Request-Response:
 
 `Requesters` and `Responders` allow you to create a request-response pattern with BullMQ.

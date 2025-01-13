@@ -120,12 +120,11 @@ export class Accumulation<DataType = any, ResultType = any> {
     if (terminate || (this.isComplete && (await this.isComplete(data)))) {
       const result = this.onComplete(data);
       await this.redis.set(completionKey, '1');
-      await this.redis.pexpire(completionKey, this.timeout * 2); // TODO: dangerous, what if we start with the key a fresh new start in the meantime?
+      await this.redis.pexpire(completionKey, this.timeout * 2);
       return result;
     }
 
     if (storedLen === 1) {
-      // TODO: maybe also delete the isComplete key for it if exist?
       await this.timeoutQueue.add(
         'timeout',
         { groupKey },

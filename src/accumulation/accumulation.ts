@@ -26,7 +26,7 @@ export class Accumulation<DataType = any, ResultType = any> {
     private opts: {
       opts: { connection: ConnectionOptions };
       accumulationName: string;
-      timeout?: number;
+      timeout: number;
       isComplete?: (data: DataType[]) => Promise<boolean>;
       onComplete: (data: DataType[]) => ResultType;
       source: AccumulationSource;

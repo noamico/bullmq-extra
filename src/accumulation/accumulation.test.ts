@@ -43,6 +43,9 @@ describe('accumulation', function () {
           }, 0);
           return { sum };
         },
+        isComplete: async (data) => {
+          return data.length === 10;
+        },
         opts: { connection },
         source: {
           queue: source.queue.name,
@@ -50,7 +53,6 @@ describe('accumulation', function () {
         },
         target,
         timeout: 10000,
-        expectedItems: 10,
       });
       accumulation.run();
 
@@ -98,7 +100,6 @@ describe('accumulation', function () {
         },
         target,
         timeout: 100,
-        expectedItems: 10,
       });
       accumulation.run();
 

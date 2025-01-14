@@ -2,6 +2,7 @@ import { ConnectionOptions, Queue, Worker } from 'bullmq';
 import BottleNeck from 'bottleneck';
 import * as IORedis from 'ioredis';
 import * as _debug from 'debug';
+import { GetRedisInstance } from '../common';
 
 const debug = _debug('bullmq:join');
 
@@ -37,7 +38,7 @@ export class Join<ResultType = any> {
       `bullmq__join__timeout__${this.joinName}`,
       opts.opts,
     );
-    this.redis = this.getIORedisInstance(opts.opts.connection);
+    this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
       Redis: this.redis,
@@ -89,7 +90,7 @@ export class Join<ResultType = any> {
     const joinKey = source.getJoinKey(data);
     const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));
-    await this.redis.pexpire(storeKey, (this.timeout || 1000 * 60 * 60) * 2);
+    await this.redis.pexpire(storeKey, this.timeout * 2);
   }
 
   private async evaluate(
@@ -119,10 +120,7 @@ export class Join<ResultType = any> {
       }));
       const result = this.onComplete(data);
       await this.redis.set(completionKey, '1');
-      await this.redis.pexpire(
-        completionKey,
-        (this.timeout || 1000 * 60 * 60) * 2,
-      );
+      await this.redis.pexpire(completionKey, this.timeout * 2);
       return result;
     }
 
@@ -130,23 +128,8 @@ export class Join<ResultType = any> {
       await this.timeoutQueue.add(
         'timeout',
         { joinKey },
-        { delay: this.timeout || 1000 * 60 * 60 },
+        { delay: this.timeout },
       );
-    }
-  }
-
-  getIORedisInstance(
-    connection: ConnectionOptions,
-  ): IORedis.Redis | IORedis.Cluster {
-    if (
-      connection instanceof IORedis.Redis ||
-      connection instanceof IORedis.Cluster
-    ) {
-      return connection;
-    } else if (Array.isArray(connection)) {
-      return new IORedis.Cluster(connection);
-    } else {
-      return new IORedis.Redis(connection);
     }
   }
 }

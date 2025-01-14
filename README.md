@@ -165,7 +165,7 @@ sourceQueue1.add('job', { groupKey: 'key1', value: 2 });
 // The result of the onComplete function will be added to the target queue
 ```
 
-*IMPORTANT NOTE: make sure not to re-use keys among different runs, even on the same data!
+*IMPORTANT NOTE: Accumulation keys must be non-recurring across the lifetime of the application. Key recurrence may cause unexpected side effects.
 
 ## Request-Response:
 

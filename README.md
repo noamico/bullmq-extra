@@ -126,10 +126,9 @@ sourceQueue1.add('job', { joinKey: 'key1', value: 1 });
 sourceQueue2.add('job', { joinKey: 'key1', value: 2 });
 
 // The result of the onComplete function will be added to the target queue
-
+```
 *IMPORTANT NOTE: Join keys must be non-recurring across the lifetime of the application. Key recurrence may cause unexpected side effects.
 
-```
 
 ## Accumulation:
 

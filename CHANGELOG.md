@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.22.8 - 2025-01-16
+#### Bug Fixes
+- fix accumulator readme - (e107914) - noamico
+#### Miscellaneous Chores
+- npm version to 0.22.7 - (5cef732) - GitHub Action
+
+- - -
+
 ## 0.22.7 - 2025-01-14
 #### Bug Fixes
 - README - (80e2425) - org

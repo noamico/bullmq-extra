@@ -155,7 +155,9 @@ const accumulation = new Accumulation({
   },
   target: new Queue('target1'),
   timeout: 1000,
-  expectedItems: 2,
+  isComplete: async (data) => {
+    return data.length === 10;
+  },
 });
 accumulation.run();
 

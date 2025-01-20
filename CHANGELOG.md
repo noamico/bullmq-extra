@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.23.0 - 2025-01-20
+#### Bug Fixes
+- const redis port - (17674f4) - noamico
+- fix queue and worker initialization - (b92f93b) - noamico
+#### Features
+- change test to work on custom port to test connectivity - (6e04428) - noamico
+#### Miscellaneous Chores
+- npm version to 0.22.8 - (0f9f835) - GitHub Action
+
+- - -
+
 ## 0.22.8 - 2025-01-16
 #### Bug Fixes
 - fix accumulator readme - (e107914) - noamico

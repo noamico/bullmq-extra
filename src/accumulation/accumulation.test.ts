@@ -7,15 +7,18 @@ import { Accumulation } from './accumulation';
 jest.setTimeout(60000);
 
 describe('accumulation', function () {
+  const redisPort = 6380;
   let connection: IORedis;
   beforeAll(async function () {
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
-      .withExposedPorts(6379)
+      .withExposedPorts(redisPort)
+      .withEnvironment({ REDIS_PORT: redisPort.toString() })
+      .withCommand(['redis-server', '--port', redisPort.toString()])
       .withWaitStrategy(
         Wait.forLogMessage(/.*Ready to accept connections tcp.*/, 1),
       );
     const redisContainer = await redisContainerSetup.start();
-    const mappedPort = redisContainer.getMappedPort(6379);
+    const mappedPort = redisContainer.getMappedPort(redisPort);
     connection = new IORedis({
       port: mappedPort,
       maxRetriesPerRequest: null,

@@ -39,11 +39,11 @@ export class Accumulation<DataType = any, ResultType = any> {
     this.isComplete = opts.isComplete;
     this.source = opts.source;
     this.target = opts.target;
+    this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
     this.timeoutQueue = new Queue(
       `bullmq__accumulation__timeout__${this.accumulationName}`,
-      opts.opts,
+      { connection: this.redis },
     );
-    this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
       Redis: this.redis,
@@ -84,7 +84,7 @@ export class Accumulation<DataType = any, ResultType = any> {
         });
       },
       {
-        connection: this.opts.opts.connection,
+        connection: this.redis,
       },
     );
   }

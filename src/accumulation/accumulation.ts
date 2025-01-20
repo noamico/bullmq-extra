@@ -41,7 +41,7 @@ export class Accumulation<DataType = any, ResultType = any> {
     this.target = opts.target;
     this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
     this.timeoutQueue = new Queue(
-      `bullmq__accumulation__timeout__${this.accumulationName}`,
+      `bullmq__accumulation__timeout_${this.accumulationName}`,
       { connection: this.redis },
     );
     this.limiter = new BottleNeck.Group({
@@ -55,7 +55,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       this.source.queue,
       async (job) => {
         const data = job.data;
-        const limiterKey = `bullmq__accumulation:limiter:${this.accumulationName}:${this.source.getGroupKey(data)}`;
+        const limiterKey = `bullmq__accumulation_limiter_${this.accumulationName}_${this.source.getGroupKey(data)}`;
         await this.storeData(data);
         await this.limiter.key(limiterKey).schedule(async () => {
           const result = await this.evaluate(this.source.getGroupKey(data));
@@ -74,7 +74,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       async (job) => {
         const data = job.data;
         const { groupKey } = data;
-        const limiterKey = `bullmq__accumulation:limiter:${this.accumulationName}:${groupKey}`;
+        const limiterKey = `bullmq__accumulation_limiter_${this.accumulationName}_${groupKey}`;
         await this.limiter.key(limiterKey).schedule(async () => {
           const result = await this.evaluate(groupKey, true);
           if (result) {
@@ -91,7 +91,7 @@ export class Accumulation<DataType = any, ResultType = any> {
 
   private async storeData(data: any) {
     const groupKey = this.source.getGroupKey(data);
-    const storeKey = `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`;
+    const storeKey = `bullmq__accumulation_value_${this.accumulationName}_${groupKey}`;
     await this.redis.lpush(storeKey, JSON.stringify(data));
     await this.redis.pexpire(storeKey, this.timeout * 2);
   }
@@ -100,18 +100,18 @@ export class Accumulation<DataType = any, ResultType = any> {
     groupKey: string,
     terminate?: boolean,
   ): Promise<ResultType | void> {
-    const completionKey = `bullmq__accumulation:isComplete:${this.accumulationName}:${groupKey}`;
+    const completionKey = `bullmq__accumulation_isComplete_${this.accumulationName}_${groupKey}`;
     const keyCompleted = await this.redis.exists(completionKey);
     if (keyCompleted) {
       return;
     }
     const storedLen = await this.redis.llen(
-      `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
+      `bullmq__accumulation_value_${this.accumulationName}_${groupKey}`,
     );
 
     const data = (
       await this.redis.lrange(
-        `bullmq__accumulation:value:${this.accumulationName}:${groupKey}`,
+        `bullmq__accumulation_value_${this.accumulationName}_${groupKey}`,
         0,
         -1,
       )

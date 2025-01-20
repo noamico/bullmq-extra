@@ -27,14 +27,19 @@ describe('accumulation', function () {
 
   describe('when completing within timeout', () => {
     it('should send complete result', async () => {
+      const sourceQueueName = `test-${v4()}`;
+      const sourceQueuePrefix = 'accumulation';
+      const sourceQueue = new Queue(sourceQueueName, {
+        connection,
+        prefix: sourceQueuePrefix,
+      });
       const accumulationName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
         connection,
+        prefix: 'different',
       });
       const source = {
-        queue: new Queue(`test-${v4()}`, {
-          connection,
-        }),
+        queue: sourceQueueName,
         getGroupKey: (data) => data.accumulationKey,
       };
 
@@ -51,8 +56,9 @@ describe('accumulation', function () {
         },
         opts: { connection },
         source: {
-          queue: source.queue.name,
+          queue: sourceQueueName,
           getGroupKey: source.getGroupKey,
+          prefix: sourceQueuePrefix,
         },
         target,
         timeout: 10000,
@@ -62,7 +68,7 @@ describe('accumulation', function () {
       const jobs = 10;
 
       for (let i = 1; i <= jobs; i++) {
-        await source.queue.add('test', { accumulationKey: 1, value: i });
+        await sourceQueue.add('test', { accumulationKey: 1, value: i });
       }
 
       while ((await target.count()) < 1) {
@@ -77,13 +83,16 @@ describe('accumulation', function () {
 
   describe('when not completing within timeout', () => {
     it('should send partial result', async () => {
+      const redisPrefix = 'another-one';
       const accumulationName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
         connection,
+        prefix: redisPrefix,
       });
       const source = {
         queue: new Queue(`test-${v4()}`, {
           connection,
+          prefix: redisPrefix,
         }),
         getGroupKey: (data) => data.accumulationKey,
       };
@@ -100,6 +109,7 @@ describe('accumulation', function () {
         source: {
           queue: source.queue.name,
           getGroupKey: source.getGroupKey,
+          prefix: redisPrefix,
         },
         target,
         timeout: 100,

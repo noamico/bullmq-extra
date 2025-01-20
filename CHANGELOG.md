@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.24.0 - 2025-01-20
+#### Features
+- use prefixes - (31f58aa) - noamico
+#### Miscellaneous Chores
+- npm version to 0.23.1 - (a3c48b7) - GitHub Action
+
+- - -
+
 ## 0.23.1 - 2025-01-20
 #### Bug Fixes
 - _ instead of : in keys - (20e8bcc) - noamico

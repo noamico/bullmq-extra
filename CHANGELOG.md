@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.23.1 - 2025-01-20
+#### Bug Fixes
+- _ instead of : in keys - (20e8bcc) - noamico
+#### Miscellaneous Chores
+- npm version to 0.23.0 - (3e8cf9e) - GitHub Action
+
+- - -
+
 ## 0.23.0 - 2025-01-20
 #### Bug Fixes
 - const redis port - (17674f4) - noamico

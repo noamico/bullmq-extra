@@ -9,6 +9,7 @@ const debug = _debug('bullmq:accumulation');
 export type AccumulationSource<DataType = any> = {
   queue: string;
   getGroupKey: (data: DataType) => string;
+  prefix: string;
 };
 
 export class Accumulation<DataType = any, ResultType = any> {
@@ -42,7 +43,7 @@ export class Accumulation<DataType = any, ResultType = any> {
     this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
     this.timeoutQueue = new Queue(
       `bullmq__accumulation__timeout_${this.accumulationName}`,
-      { connection: this.redis },
+      { connection: this.redis, prefix: this.source.prefix },
     );
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
@@ -67,6 +68,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       },
       {
         connection: this.redis,
+        prefix: this.source.prefix,
       },
     );
     new Worker(
@@ -85,6 +87,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       },
       {
         connection: this.redis,
+        prefix: this.source.prefix,
       },
     );
   }

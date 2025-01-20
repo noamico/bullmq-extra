@@ -7,11 +7,13 @@ import { Accumulation } from './accumulation';
 jest.setTimeout(60000);
 
 describe('accumulation', function () {
+  const redisPort = 6380;
   let connection: IORedis;
-  const redisPort = 6379;
   beforeAll(async function () {
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
       .withExposedPorts(redisPort)
+      .withEnvironment({ REDIS_PORT: redisPort.toString() })
+      .withCommand(['redis-server', '--port', redisPort.toString()])
       .withWaitStrategy(
         Wait.forLogMessage(/.*Ready to accept connections tcp.*/, 1),
       );

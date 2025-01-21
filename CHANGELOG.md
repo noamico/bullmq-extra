@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.25.0 - 2025-01-21
+#### Features
+- graceful-shutdown for accumulator - (f446217) - noamico
+#### Miscellaneous Chores
+- npm version to 0.24.0 - (4b01599) - GitHub Action
+
+- - -
+
 ## 0.24.0 - 2025-01-20
 #### Features
 - use prefixes - (31f58aa) - noamico

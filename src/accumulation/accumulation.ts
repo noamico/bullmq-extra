@@ -22,6 +22,8 @@ export class Accumulation<DataType = any, ResultType = any> {
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
+  private worker: Worker;
+  private timeoutWorker: Worker;
 
   constructor(
     private opts: {
@@ -52,7 +54,7 @@ export class Accumulation<DataType = any, ResultType = any> {
   }
 
   public run() {
-    new Worker(
+    this.worker = new Worker(
       this.source.queue,
       async (job) => {
         const data = job.data;
@@ -71,7 +73,7 @@ export class Accumulation<DataType = any, ResultType = any> {
         prefix: this.source.prefix,
       },
     );
-    new Worker(
+    this.timeoutWorker = new Worker(
       this.timeoutQueue.name,
       async (job) => {
         const data = job.data;
@@ -90,6 +92,11 @@ export class Accumulation<DataType = any, ResultType = any> {
         prefix: this.source.prefix,
       },
     );
+  }
+
+  public async close() {
+    await this.worker.close();
+    await this.timeoutWorker.close();
   }
 
   private async storeData(data: any) {

@@ -20,11 +20,13 @@ export class Join<ResultType = any> {
   private target: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
+  private timeoutWorker: Worker;
+  private workers = new Map<string, Worker>();
 
   constructor(opts: {
     opts: { connection: ConnectionOptions };
     joinName: string;
-    timeout?: number;
+    timeout: number;
     onComplete: (data: { queue: string; val: any }[]) => ResultType;
     sources: JoinSource[];
     target: Queue<ResultType>;
@@ -34,39 +36,50 @@ export class Join<ResultType = any> {
     this.onComplete = opts.onComplete;
     this.sources = opts.sources;
     this.target = opts.target;
-    this.timeoutQueue = new Queue(
-      `bullmq__join__timeout__${this.joinName}`,
-      opts.opts,
-    );
     this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
+    this.timeoutQueue = new Queue(`bullmq__join__timeout__${this.joinName}`, {
+      connection: this.redis,
+      prefix: `{${this.joinName}}`,
+    });
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
       Redis: this.redis,
     });
   }
 
+  public async close() {
+    for (const worker of this.workers.values()) {
+      await worker.close();
+    }
+    await this.timeoutWorker.close();
+  }
+
   public run() {
     for (const source of this.sources) {
-      new Worker(
+      this.workers.set(
         source.queue,
-        async (job) => {
-          const data = job.data;
-          const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinKey(data)}`;
-          await this.storeData(source, data);
-          await this.limiter.key(limiterKey).schedule(async () => {
-            const result = await this.evaluate(source.getJoinKey(data));
-            if (result) {
-              debug('completed', result);
-              await this.target.add('completed', result);
-            }
-          });
-        },
-        {
-          connection: this.redis,
-        },
+        new Worker(
+          source.queue,
+          async (job) => {
+            const data = job.data;
+            const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinKey(data)}`;
+            await this.storeData(source, data);
+            await this.limiter.key(limiterKey).schedule(async () => {
+              const result = await this.evaluate(source.getJoinKey(data));
+              if (result) {
+                debug('completed', result);
+                await this.target.add('completed', result);
+              }
+            });
+          },
+          {
+            connection: this.redis,
+            prefix: `{${this.joinName}}`,
+          },
+        ),
       );
     }
-    new Worker(
+    this.timeoutWorker = new Worker(
       this.timeoutQueue.name,
       async (job) => {
         const data = job.data;
@@ -82,6 +95,7 @@ export class Join<ResultType = any> {
       },
       {
         connection: this.redis,
+        prefix: `{${this.joinName}}`,
       },
     );
   }

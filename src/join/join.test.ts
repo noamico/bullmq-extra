@@ -9,8 +9,11 @@ jest.setTimeout(60000);
 describe('join', function () {
   let connection: IORedis;
   beforeAll(async function () {
+    const redisPort = 6379;
     const redisContainerSetup = new GenericContainer('redis:7.4.0')
-      .withExposedPorts(6379)
+      .withExposedPorts(redisPort)
+      .withEnvironment({ REDIS_PORT: redisPort.toString() })
+      .withCommand(['redis-server', '--port', redisPort.toString()])
       .withWaitStrategy(
         Wait.forLogMessage(/.*Ready to accept connections tcp.*/, 1),
       );
@@ -27,17 +30,20 @@ describe('join', function () {
       const joinName = `test-${v4()}`;
       const target = new Queue(`test-${v4()}`, {
         connection,
+        prefix: `{${joinName}}`,
       });
       const sources = [
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
+            prefix: `{${joinName}}`,
           }),
           getJoinKey: (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
+            prefix: `{${joinName}}`,
           }),
           getJoinKey: (data) => data.joinKey,
         },
@@ -97,12 +103,14 @@ describe('join', function () {
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
+            prefix: `{${joinName}}`,
           }),
           getJoinKey: (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
+            prefix: `{${joinName}}`,
           }),
           getJoinKey: (data) => data.joinKey,
         },
@@ -160,6 +168,7 @@ describe('join', function () {
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
+            prefix: `{${joinName}}`,
           }),
           getJoinKey: (data) => data.joinKey,
         },

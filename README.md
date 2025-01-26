@@ -257,6 +257,14 @@ await axios.post('http://localhost:3003/job', {
 });
 ```
 
+### Graceful Shutdown:
+
+In order to preform jobs draining and to minimize stalled jobs, 
+just call the _close_ method of the class you are working with. For example:
+```typescript
+await accumulation.close(); // accumulation is a variable from Accumulation type
+```
+
 ### Thin Clients:
 Thin clients are built to interact with the broker and provide a thin convenient API for utilizing the full power of BullMQ + BullMQ Extra in languages other than NodeJS.
 

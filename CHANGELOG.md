@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.26.0 - 2025-01-26
+#### Features
+- add close and prefix for joiner - (28d869f) - noamico
+#### Miscellaneous Chores
+- npm version to 0.25.0 - (d3caeaa) - GitHub Action
+
+- - -
+
 ## 0.25.0 - 2025-01-21
 #### Features
 - graceful-shutdown for accumulator - (f446217) - noamico

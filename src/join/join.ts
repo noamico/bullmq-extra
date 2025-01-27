@@ -62,10 +62,12 @@ export class Join<ResultType = any> {
           source.queue,
           async (job) => {
             const data = job.data;
-            const limiterKey = `bullmq__join:limiter:${this.joinName}:${source.getJoinKey(data)}`;
+            const joinKey = source.getJoinKey(data);
+            if (!joinKey) return;
+            const limiterKey = `bullmq__join:limiter:${this.joinName}:${joinKey}`;
             await this.storeData(source, data);
             await this.limiter.key(limiterKey).schedule(async () => {
-              const result = await this.evaluate(source.getJoinKey(data));
+              const result = await this.evaluate(joinKey);
               if (result) {
                 debug('completed', result);
                 await this.target.add('completed', result);
@@ -84,6 +86,7 @@ export class Join<ResultType = any> {
       async (job) => {
         const data = job.data;
         const { joinKey } = data;
+        if (!joinKey) return;
         const limiterKey = `bullmq__join:limiter:${this.joinName}:${joinKey}`;
         await this.limiter.key(limiterKey).schedule(async () => {
           const result = await this.evaluate(joinKey, true);
@@ -102,6 +105,7 @@ export class Join<ResultType = any> {
 
   private async storeData(source: JoinSource, data: any) {
     const joinKey = source.getJoinKey(data);
+    if (!joinKey) return;
     const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));
     await this.redis.pexpire(storeKey, this.timeout * 2);

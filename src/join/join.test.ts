@@ -91,6 +91,61 @@ describe('join', function () {
           .sort((a, b) => a.sum - b.sum),
       );
     });
+
+    it('should not send complete result (null key)', async () => {
+      const joinName = `test-${v4()}`;
+      const target = new Queue(`test-${v4()}`, {
+        connection,
+        prefix: `{${joinName}}`,
+      });
+      const sources = [
+        {
+          queue: new Queue(`test-${v4()}`, {
+            connection,
+            prefix: `{${joinName}}`,
+          }),
+          getJoinKey: (data) => undefined,
+        },
+        {
+          queue: new Queue(`test-${v4()}`, {
+            connection,
+            prefix: `{${joinName}}`,
+          }),
+          getJoinKey: (data) => undefined,
+        },
+      ];
+
+      const join = new Join({
+        joinName,
+        onComplete: (data) => {
+          const sum = data.reduce((acc, val) => {
+            return acc + val.val.value;
+          }, 0);
+          return { sum };
+        },
+        opts: { connection },
+        sources: sources.map((source) => ({
+          queue: source.queue.name,
+          getJoinKey: source.getJoinKey,
+        })),
+        target,
+        timeout: 10000,
+      });
+      join.run();
+
+      const jobs = 10;
+
+      for (let i = 1; i <= jobs; i++) {
+        for (const source of sources) {
+          await source.queue.add('test', { joinKey: i, value: i });
+        }
+      }
+
+      // give enough to make sure it is not processing anything
+      await delay(5000);
+
+      expect(await target.count()).toEqual(0);
+    });
   });
 
   describe('when not completing within timeout', () => {

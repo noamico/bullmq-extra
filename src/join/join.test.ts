@@ -104,6 +104,7 @@ describe('join', function () {
             connection,
             prefix: `{${joinName}}`,
           }),
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           getJoinKey: (data) => undefined,
         },
         {
@@ -111,6 +112,7 @@ describe('join', function () {
             connection,
             prefix: `{${joinName}}`,
           }),
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           getJoinKey: (data) => undefined,
         },
       ];

@@ -117,6 +117,7 @@ describe('join', function () {
         },
       ];
 
+      const timeoutPeriod = 10000;
       const join = new Join({
         joinName,
         onComplete: (data) => {
@@ -131,7 +132,7 @@ describe('join', function () {
           getJoinKey: source.getJoinKey,
         })),
         target,
-        timeout: 10000,
+        timeout: timeoutPeriod,
       });
       join.run();
 
@@ -144,7 +145,7 @@ describe('join', function () {
       }
 
       // give enough to make sure it is not processing anything
-      await delay(5000);
+      await delay(timeoutPeriod * 2 + 100);
 
       expect(await target.count()).toEqual(0);
     });

@@ -63,7 +63,10 @@ export class Join<ResultType = any> {
           async (job) => {
             const data = job.data;
             const joinKey = source.getJoinKey(data);
-            if (!joinKey) return;
+            if (!joinKey) {
+              debug('joinKey is undefined! skipping', data);
+              return;
+            }
             const limiterKey = `bullmq__join:limiter:${this.joinName}:${joinKey}`;
             await this.storeData(source, data);
             await this.limiter.key(limiterKey).schedule(async () => {
@@ -86,7 +89,10 @@ export class Join<ResultType = any> {
       async (job) => {
         const data = job.data;
         const { joinKey } = data;
-        if (!joinKey) return;
+        if (!joinKey) {
+          debug('joinKey is undefined! skipping', data);
+          return;
+        }
         const limiterKey = `bullmq__join:limiter:${this.joinName}:${joinKey}`;
         await this.limiter.key(limiterKey).schedule(async () => {
           const result = await this.evaluate(joinKey, true);
@@ -105,7 +111,10 @@ export class Join<ResultType = any> {
 
   private async storeData(source: JoinSource, data: any) {
     const joinKey = source.getJoinKey(data);
-    if (!joinKey) return;
+    if (!joinKey) {
+      debug('joinKey is undefined! ignoring data', data);
+      return;
+    }
     const storeKey = `bullmq__join:value:${this.joinName}:${joinKey}:${source.queue}`;
     await this.redis.set(storeKey, JSON.stringify(data));
     await this.redis.pexpire(storeKey, this.timeout * 2);

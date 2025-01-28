@@ -129,6 +129,7 @@ sourceQueue2.add('job', { joinKey: 'key1', value: 2 });
 ```
 **IMPORTANT NOTE**: Join keys must be non-recurring across the lifetime of the application. Key recurrence may cause unexpected side effects.
 
+If join-key for given data comes falsy, the data will not be stored and join will not be preformed on this job.
 
 ## Accumulation:
 
@@ -152,6 +153,7 @@ const accumulation = new Accumulation({
   source: {
     queue: 'source1',
     getGroupKey: (data) => data.groupKey,
+    prefix: `{prefix1}`,
   },
   target: new Queue('target1'),
   timeout: 1000,
@@ -169,6 +171,8 @@ sourceQueue1.add('job', { groupKey: 'key1', value: 2 });
 ```
 
 **IMPORTANT NOTE**: Accumulation keys must be non-recurring across the lifetime of the application. Key recurrence may cause unexpected side effects.
+
+If group-key for given data comes falsy, the data will not be stored and accumulation will not be preformed on this job.
 
 ## Request-Response:
 

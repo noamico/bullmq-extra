@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.27.0 - 2025-01-28
+#### Features
+- add log msg and readme - (64a37a4) - noamico
+- add handling for null keys cases - (815c619) - noamico
+- add handling for null keys cases - (c48459a) - noamico
+- add handling for null keys cases - (13c1eb6) - noamico
+#### Miscellaneous Chores
+- npm version to 0.26.0 - (6f4cc3d) - GitHub Action
+
+- - -
+
 ## 0.26.0 - 2025-01-26
 #### Features
 - add close and prefix for joiner - (28d869f) - noamico

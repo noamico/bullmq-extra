@@ -58,10 +58,15 @@ export class Accumulation<DataType = any, ResultType = any> {
       this.source.queue,
       async (job) => {
         const data = job.data;
-        const limiterKey = `bullmq__accumulation_limiter_${this.accumulationName}_${this.source.getGroupKey(data)}`;
+        const groupKey = this.source.getGroupKey(data);
+        if (!groupKey) {
+          debug('groupKey is undefined! skipping', data);
+          return;
+        }
+        const limiterKey = `bullmq__accumulation_limiter_${this.accumulationName}_${groupKey}`;
         await this.storeData(data);
         await this.limiter.key(limiterKey).schedule(async () => {
-          const result = await this.evaluate(this.source.getGroupKey(data));
+          const result = await this.evaluate(groupKey);
           if (result) {
             debug('completed', result);
             await this.target.add('completed', result);
@@ -78,6 +83,10 @@ export class Accumulation<DataType = any, ResultType = any> {
       async (job) => {
         const data = job.data;
         const { groupKey } = data;
+        if (!groupKey) {
+          debug('groupKey is undefined! skipping', data);
+          return;
+        }
         const limiterKey = `bullmq__accumulation_limiter_${this.accumulationName}_${groupKey}`;
         await this.limiter.key(limiterKey).schedule(async () => {
           const result = await this.evaluate(groupKey, true);
@@ -101,6 +110,10 @@ export class Accumulation<DataType = any, ResultType = any> {
 
   private async storeData(data: any) {
     const groupKey = this.source.getGroupKey(data);
+    if (!groupKey) {
+      debug('groupKey is undefined! ignoring data', data);
+      return;
+    }
     const storeKey = `bullmq__accumulation_value_${this.accumulationName}_${groupKey}`;
     await this.redis.lpush(storeKey, JSON.stringify(data));
     await this.redis.pexpire(storeKey, this.timeout * 2);

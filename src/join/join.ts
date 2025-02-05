@@ -75,7 +75,7 @@ export class Join<ResultType = any> {
               const result = await this.evaluate(joinKey);
               if (result) {
                 debug('completed', result);
-                await this.target.add('completed', result);
+                await this.target?.add('completed', result);
               }
             });
           },
@@ -100,7 +100,7 @@ export class Join<ResultType = any> {
           const result = await this.evaluate(joinKey, true);
           if (result) {
             debug('timeout', result);
-            await this.target.add('completed', result);
+            await this.target?.add('completed', result);
           }
         });
       },

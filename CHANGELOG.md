@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.28.0 - 2025-02-05
+#### Features
+- change join key and complete methods to async - (cdb80b6) - noamico
+- change join key and complete methods to async - (bc2a82c) - noamico
+#### Miscellaneous Chores
+- npm version to 0.27.0 - (64f2355) - GitHub Action
+
+- - -
+
 ## 0.27.0 - 2025-01-28
 #### Features
 - add log msg and readme - (64a37a4) - noamico

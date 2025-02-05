@@ -8,16 +8,18 @@ const debug = _debug('bullmq:join');
 
 export type JoinSource<DataType = any> = {
   queue: string;
-  getJoinKey: (data: DataType) => string;
+  getJoinKey: (data: DataType) => Promise<string>;
 };
 
 export class Join<ResultType = any> {
   private timeoutQueue: Queue;
   private joinName: string;
   private timeout?: number;
-  private onComplete: (data: { queue: string; val: any }[]) => ResultType;
+  private onComplete: (
+    data: { queue: string; val: any }[],
+  ) => Promise<ResultType>;
   private sources: JoinSource[];
-  private target: Queue<ResultType>;
+  private target?: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
   private timeoutWorker: Worker;
@@ -27,9 +29,9 @@ export class Join<ResultType = any> {
     opts: { connection: ConnectionOptions };
     joinName: string;
     timeout: number;
-    onComplete: (data: { queue: string; val: any }[]) => ResultType;
+    onComplete: (data: { queue: string; val: any }[]) => Promise<ResultType>;
     sources: JoinSource[];
-    target: Queue<ResultType>;
+    target?: Queue<ResultType>;
   }) {
     this.joinName = opts.joinName;
     this.timeout = opts.timeout;
@@ -62,7 +64,7 @@ export class Join<ResultType = any> {
           source.queue,
           async (job) => {
             const data = job.data;
-            const joinKey = source.getJoinKey(data);
+            const joinKey = await source.getJoinKey(data);
             if (!joinKey) {
               debug('joinKey is undefined! skipping', data);
               return;
@@ -110,7 +112,7 @@ export class Join<ResultType = any> {
   }
 
   private async storeData(source: JoinSource, data: any) {
-    const joinKey = source.getJoinKey(data);
+    const joinKey = await source.getJoinKey(data);
     if (!joinKey) {
       debug('joinKey is undefined! ignoring data', data);
       return;
@@ -145,7 +147,7 @@ export class Join<ResultType = any> {
         queue: stored.queue,
         val: JSON.parse(stored.val),
       }));
-      const result = this.onComplete(data);
+      const result = await this.onComplete(data);
       await this.redis.set(completionKey, '1');
       await this.redis.pexpire(completionKey, this.timeout * 2);
       return result;

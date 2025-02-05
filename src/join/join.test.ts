@@ -38,20 +38,20 @@ describe('join', function () {
             connection,
             prefix: `{${joinName}}`,
           }),
-          getJoinKey: (data) => data.joinKey,
+          getJoinKey: async (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
             prefix: `{${joinName}}`,
           }),
-          getJoinKey: (data) => data.joinKey,
+          getJoinKey: async (data) => data.joinKey,
         },
       ];
 
       const join = new Join({
         joinName,
-        onComplete: (data) => {
+        onComplete: async (data) => {
           const sum = data.reduce((acc, val) => {
             return acc + val.val.value;
           }, 0);
@@ -105,7 +105,7 @@ describe('join', function () {
             prefix: `{${joinName}}`,
           }),
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          getJoinKey: (data) => undefined,
+          getJoinKey: async (data) => undefined,
         },
         {
           queue: new Queue(`test-${v4()}`, {
@@ -113,14 +113,14 @@ describe('join', function () {
             prefix: `{${joinName}}`,
           }),
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          getJoinKey: (data) => undefined,
+          getJoinKey: async (data) => undefined,
         },
       ];
 
       const timeoutPeriod = 10000;
       const join = new Join({
         joinName,
-        onComplete: (data) => {
+        onComplete: async (data) => {
           const sum = data.reduce((acc, val) => {
             return acc + val.val.value;
           }, 0);
@@ -163,20 +163,20 @@ describe('join', function () {
             connection,
             prefix: `{${joinName}}`,
           }),
-          getJoinKey: (data) => data.joinKey,
+          getJoinKey: async (data) => data.joinKey,
         },
         {
           queue: new Queue(`test-${v4()}`, {
             connection,
             prefix: `{${joinName}}`,
           }),
-          getJoinKey: (data) => data.joinKey,
+          getJoinKey: async (data) => data.joinKey,
         },
       ];
 
       const join = new Join({
         joinName,
-        onComplete: (data) => {
+        onComplete: async (data) => {
           const sum = data.reduce((acc, val) => {
             return acc + val.val.value;
           }, 0);
@@ -228,13 +228,13 @@ describe('join', function () {
             connection,
             prefix: `{${joinName}}`,
           }),
-          getJoinKey: (data) => data.joinKey,
+          getJoinKey: async (data) => data.joinKey,
         },
       ];
 
       const join = new Join({
         joinName,
-        onComplete: (data) => {
+        onComplete: async (data) => {
           const sum = data.reduce((acc, val) => {
             return acc + val.val.value;
           }, 0);

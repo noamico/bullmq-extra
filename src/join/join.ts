@@ -42,6 +42,10 @@ export class Join<ResultType = any> {
     this.timeoutQueue = new Queue(`bullmq__join__timeout__${this.joinName}`, {
       connection: this.redis,
       prefix: `{${this.joinName}}`,
+      defaultJobOptions: {
+        removeOnFail: { age: 60 * 60 * 24 }, // 1 day
+        removeOnComplete: { count: 1000 },
+      },
     });
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,

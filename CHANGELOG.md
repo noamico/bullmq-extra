@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.29.0 - 2025-02-10
+#### Features
+- limit completed and failed in target queue, align accumulator - (f715ee0) - noamico
+#### Miscellaneous Chores
+- npm version to 0.28.0 - (3b80cfd) - GitHub Action
+
+- - -
+
 ## 0.28.0 - 2025-02-05
 #### Features
 - change join key and complete methods to async - (cdb80b6) - noamico

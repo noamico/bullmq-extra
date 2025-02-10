@@ -49,14 +49,15 @@ describe('join', function () {
         },
       ];
 
+      const completeFunc = jest.fn(async (data) => {
+        const sum = data.reduce((acc, val) => {
+          return acc + val.val.value;
+        }, 0);
+        return { sum };
+      });
       const join = new Join({
         joinName,
-        onComplete: async (data) => {
-          const sum = data.reduce((acc, val) => {
-            return acc + val.val.value;
-          }, 0);
-          return { sum };
-        },
+        onComplete: completeFunc,
         opts: { connection },
         sources: sources.map((source) => ({
           queue: source.queue.name,
@@ -90,6 +91,7 @@ describe('join', function () {
           }))
           .sort((a, b) => a.sum - b.sum),
       );
+      expect(completeFunc).toHaveBeenCalledTimes(10);
     });
 
     it('should not send complete result (null key)', async () => {
@@ -148,6 +150,64 @@ describe('join', function () {
       await delay(timeoutPeriod * 2 + 100);
 
       expect(await target.count()).toEqual(0);
+    });
+
+    it('should handle complete without target queue', async () => {
+      const timeoutPeriod = 10000;
+      const joinName = `test-${v4()}`;
+      const sources = [
+        {
+          queue: new Queue(`test-${v4()}`, {
+            connection,
+            prefix: `{${joinName}}`,
+          }),
+          getJoinKey: async (data) => data.joinKey,
+        },
+        {
+          queue: new Queue(`test-${v4()}`, {
+            connection,
+            prefix: `{${joinName}}`,
+          }),
+          getJoinKey: async (data) => data.joinKey,
+        },
+        {
+          queue: new Queue(`test-${v4()}`, {
+            connection,
+            prefix: `{${joinName}}`,
+          }),
+          getJoinKey: async (data) => data.joinKey,
+        },
+      ];
+
+      const completeFunc = jest.fn(async (data) => {
+        const sum = data.reduce((acc, val) => {
+          return acc + val.val.value;
+        }, 0);
+        return { sum };
+      });
+      const join = new Join({
+        joinName,
+        onComplete: completeFunc,
+        opts: { connection },
+        sources: sources.map((source) => ({
+          queue: source.queue.name,
+          getJoinKey: source.getJoinKey,
+        })),
+        timeout: timeoutPeriod,
+      });
+      join.run();
+
+      const jobs = 10;
+
+      for (let i = 1; i <= jobs; i++) {
+        for (const source of sources) {
+          await source.queue.add('test', { joinKey: i, value: i });
+        }
+      }
+
+      await delay(timeoutPeriod * 2 + 100);
+
+      expect(completeFunc).toHaveBeenCalledTimes(10);
     });
   });
 

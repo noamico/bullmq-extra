@@ -8,7 +8,7 @@ const debug = _debug('bullmq:accumulation');
 
 export type AccumulationSource<DataType = any> = {
   queue: string;
-  getGroupKey: (data: DataType) => string;
+  getGroupKey: (data: DataType) => Promise<string>;
   prefix: string;
 };
 
@@ -16,10 +16,10 @@ export class Accumulation<DataType = any, ResultType = any> {
   private timeoutQueue: Queue;
   private accumulationName: string;
   private timeout: number;
-  private onComplete: (data: DataType[]) => ResultType;
+  private onComplete: (data: DataType[]) => Promise<ResultType>;
   private isComplete?: (data: DataType[]) => Promise<boolean>;
   private source: AccumulationSource;
-  private target: Queue<ResultType>;
+  private target?: Queue<ResultType>;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
   private worker: Worker;
@@ -31,9 +31,9 @@ export class Accumulation<DataType = any, ResultType = any> {
       accumulationName: string;
       timeout: number;
       isComplete?: (data: DataType[]) => Promise<boolean>;
-      onComplete: (data: DataType[]) => ResultType;
+      onComplete: (data: DataType[]) => Promise<ResultType>;
       source: AccumulationSource;
-      target: Queue<ResultType>;
+      target?: Queue<ResultType>;
     },
   ) {
     this.accumulationName = opts.accumulationName;
@@ -45,7 +45,14 @@ export class Accumulation<DataType = any, ResultType = any> {
     this.redis = GetRedisInstance.getIORedisInstance(opts.opts.connection);
     this.timeoutQueue = new Queue(
       `bullmq__accumulation__timeout_${this.accumulationName}`,
-      { connection: this.redis, prefix: this.source.prefix },
+      {
+        connection: this.redis,
+        prefix: this.source.prefix,
+        defaultJobOptions: {
+          removeOnFail: { age: 60 * 60 * 24 }, // 1 day
+          removeOnComplete: { count: 1000 },
+        },
+      },
     );
     this.limiter = new BottleNeck.Group({
       maxConcurrent: 1,
@@ -58,7 +65,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       this.source.queue,
       async (job) => {
         const data = job.data;
-        const groupKey = this.source.getGroupKey(data);
+        const groupKey = await this.source.getGroupKey(data);
         if (!groupKey) {
           debug('groupKey is undefined! skipping', data);
           return;
@@ -69,7 +76,7 @@ export class Accumulation<DataType = any, ResultType = any> {
           const result = await this.evaluate(groupKey);
           if (result) {
             debug('completed', result);
-            await this.target.add('completed', result);
+            await this.target?.add('completed', result);
           }
         });
       },
@@ -92,7 +99,7 @@ export class Accumulation<DataType = any, ResultType = any> {
           const result = await this.evaluate(groupKey, true);
           if (result) {
             debug('timeout', result);
-            await this.target.add('completed', result);
+            await this.target?.add('completed', result);
           }
         });
       },
@@ -109,7 +116,7 @@ export class Accumulation<DataType = any, ResultType = any> {
   }
 
   private async storeData(data: any) {
-    const groupKey = this.source.getGroupKey(data);
+    const groupKey = await this.source.getGroupKey(data);
     if (!groupKey) {
       debug('groupKey is undefined! ignoring data', data);
       return;
@@ -141,7 +148,7 @@ export class Accumulation<DataType = any, ResultType = any> {
     ).map((stored) => JSON.parse(stored));
 
     if (terminate || (this.isComplete && (await this.isComplete(data)))) {
-      const result = this.onComplete(data);
+      const result = await this.onComplete(data);
       await this.redis.set(completionKey, '1');
       await this.redis.pexpire(completionKey, this.timeout * 2);
       return result;

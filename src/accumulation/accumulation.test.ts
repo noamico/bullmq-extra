@@ -40,12 +40,12 @@ describe('accumulation', function () {
       });
       const source = {
         queue: sourceQueueName,
-        getGroupKey: (data) => data.accumulationKey,
+        getGroupKey: async (data) => data.accumulationKey,
       };
 
       const accumulation = new Accumulation({
         accumulationName,
-        onComplete: (data) => {
+        onComplete: async (data) => {
           const sum = data.reduce((acc, val) => {
             return acc + val.value;
           }, 0);
@@ -94,12 +94,12 @@ describe('accumulation', function () {
           connection,
           prefix: redisPrefix,
         }),
-        getGroupKey: (data) => data.accumulationKey,
+        getGroupKey: async (data) => data.accumulationKey,
       };
 
       const accumulation = new Accumulation({
         accumulationName,
-        onComplete: (data) => {
+        onComplete: async (data) => {
           const sum = data.reduce((acc, val) => {
             return acc + val.value;
           }, 0);

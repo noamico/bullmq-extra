@@ -6,18 +6,18 @@ import * as _debug from 'debug';
 
 const debug = _debug('bullmq:router:router');
 
-export class Router<DataType extends string = any> {
+export class Router<DataType = any> {
   private consumers: Consumer[] = [];
   private workers: QueueToStreamWorker[] = [];
   private closed: Promise<void>;
   private closedCount: number = 0;
   private sourceQueues: string[];
-  private targetQueues: Queue<string, DataType>[];
+  private targetQueues: Queue[];
   private opts?: RouterOptions;
 
   constructor(opts: {
     sources: string[];
-    targets: Queue<string, DataType>[];
+    targets: Queue[];
     opts?: RouterOptions;
   }) {
     this.sourceQueues = opts.sources;

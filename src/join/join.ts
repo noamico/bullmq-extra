@@ -11,7 +11,7 @@ export type JoinSource<DataType = any> = {
   getJoinKey: (data: DataType) => Promise<string>;
 };
 
-export class Join<ResultType extends string = any> {
+export class Join<ResultType = any> {
   private timeoutQueue: Queue;
   private joinName: string;
   private timeout?: number;
@@ -19,7 +19,7 @@ export class Join<ResultType extends string = any> {
     data: { queue: string; val: any }[],
   ) => Promise<ResultType>;
   private sources: JoinSource[];
-  private target?: Queue<string, ResultType>;
+  private target?: Queue;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
   private timeoutWorker: Worker;
@@ -31,7 +31,7 @@ export class Join<ResultType extends string = any> {
     timeout: number;
     onComplete: (data: { queue: string; val: any }[]) => Promise<ResultType>;
     sources: JoinSource[];
-    target?: Queue<string, ResultType>;
+    target?: Queue;
   }) {
     this.joinName = opts.joinName;
     this.timeout = opts.timeout;

@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## 0.30.0 - 2025-02-24
+#### Bug Fixes
+- rm queue template types - (270287f) - noamico
+#### Features
+- add log, fix types - (02606a8) - noamico
+- update packages - (d9dec5d) - noamico
+#### Miscellaneous Chores
+- npm version to 0.29.0 - (f634206) - GitHub Action
+
+- - -
+
 ## 0.29.0 - 2025-02-10
 #### Features
 - limit completed and failed in target queue, align accumulator - (f715ee0) - noamico

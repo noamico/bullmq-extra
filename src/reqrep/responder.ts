@@ -2,7 +2,7 @@ import { ConnectionOptions, Queue, Worker } from 'bullmq';
 
 export class Responder<RequestType = any, ResponseType = any> {
   private responderName: string;
-  private replyTos: Map<string, Queue<ResponseType>> = new Map();
+  private replyTos: Map<string, Queue> = new Map();
 
   constructor(
     private opts: {

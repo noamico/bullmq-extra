@@ -19,7 +19,7 @@ export class Join<ResultType = any> {
     data: { queue: string; val: any }[],
   ) => Promise<ResultType>;
   private sources: JoinSource[];
-  private target?: Queue<ResultType>;
+  private target?: Queue;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
   private timeoutWorker: Worker;
@@ -31,7 +31,7 @@ export class Join<ResultType = any> {
     timeout: number;
     onComplete: (data: { queue: string; val: any }[]) => Promise<ResultType>;
     sources: JoinSource[];
-    target?: Queue<ResultType>;
+    target?: Queue;
   }) {
     this.joinName = opts.joinName;
     this.timeout = opts.timeout;
@@ -133,6 +133,7 @@ export class Join<ResultType = any> {
     const completionKey = `bullmq__join:isComplete:${this.joinName}:${joinKey}`;
     const isComplete = await this.redis.exists(completionKey);
     if (isComplete) {
+      debug('joinKey is already completed', completionKey);
       return;
     }
     const allStored = (

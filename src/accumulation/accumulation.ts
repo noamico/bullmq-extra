@@ -19,7 +19,7 @@ export class Accumulation<DataType = any, ResultType = any> {
   private onComplete: (data: DataType[]) => Promise<ResultType>;
   private isComplete?: (data: DataType[]) => Promise<boolean>;
   private source: AccumulationSource;
-  private target?: Queue<ResultType>;
+  private target?: Queue;
   private limiter: BottleNeck.Group;
   private redis: IORedis.Redis | IORedis.Cluster;
   private worker: Worker;
@@ -33,7 +33,7 @@ export class Accumulation<DataType = any, ResultType = any> {
       isComplete?: (data: DataType[]) => Promise<boolean>;
       onComplete: (data: DataType[]) => Promise<ResultType>;
       source: AccumulationSource;
-      target?: Queue<ResultType>;
+      target?: Queue;
     },
   ) {
     this.accumulationName = opts.accumulationName;

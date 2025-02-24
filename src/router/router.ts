@@ -12,12 +12,12 @@ export class Router<DataType = any> {
   private closed: Promise<void>;
   private closedCount: number = 0;
   private sourceQueues: string[];
-  private targetQueues: Queue<DataType>[];
+  private targetQueues: Queue[];
   private opts?: RouterOptions;
 
   constructor(opts: {
     sources: string[];
-    targets: Queue<DataType>[];
+    targets: Queue[];
     opts?: RouterOptions;
   }) {
     this.sourceQueues = opts.sources;
